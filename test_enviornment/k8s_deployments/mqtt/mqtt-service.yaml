@@ -6,12 +6,5 @@ spec:
   selector:
     app: mosquitto
   ports:
-  - name: tcp
-    port: 1883
+  - port: 1883
     targetPort: 1883
-    nodePort: 32001
-  - name: ws
-    port: 9001
-    targetPort: 9001
-    nodePort: 32002
-  type: LoadBalancer

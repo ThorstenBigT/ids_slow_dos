@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-red
+spec:
+  selector:
+    app: node-red
+  type: LoadBalancer
+  ports:
+    - name: node-red-ui
+      port: 1880
+      protocol: TCP
+      targetPort: node-red-ui
+      nodePort: 32010
+

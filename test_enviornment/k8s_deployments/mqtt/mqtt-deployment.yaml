@@ -25,19 +25,8 @@ spec:
         volumeMounts:
             - name: mosquitto-config
               mountPath: /mosquitto/config/mosquitto.conf
-              subPath: mosquitto.conf   
-            - name: mosquitto-data
-              mountPath: /mosquitto/data
-            - name: mosquitto-secret
-              mountPath: /mosquitto/config/passwd
-              subPath: passwd
+              subPath: mosquitto.conf
       volumes:
-        - name: mosquitto-data
-          persistentVolumeClaim:
-            claimName: mqtt-data-pvc
         - name: mosquitto-config
           configMap:
             name: mosquitto-config
-        - name: mosquitto-secret
-          secret:
-            secretName: mosquitto-secret
