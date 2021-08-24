@@ -14,7 +14,8 @@ spec:
         app: node-red
     spec:
       securityContext:
-        fsGroup: 27
+        runAsUser: 1000
+        runAsGroup: 27
       containers:
       - name: node-red
         image: nodered/node-red:latest
