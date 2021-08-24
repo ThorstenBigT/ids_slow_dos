@@ -27,6 +27,8 @@ spec:
         - name: node-red-config
           mountPath: /data/settings.js
           subPath: settings.js 
+      securityContext:
+        fsGroup: 0
         env:
         - name: NODE_NAME
           valueFrom:
