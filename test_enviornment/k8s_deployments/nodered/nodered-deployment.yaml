@@ -26,9 +26,9 @@ spec:
           privileged: true
         volumeMounts:
         - name: node-red-data
-          mountPath: /data
+          mountPath: /usr/data
         - name: node-red-config
-          mountPath: /data/settings.js
+          mountPath: usr/data/settings.js
           subPath: settings.js 
         env:
         - name: NODE_NAME
