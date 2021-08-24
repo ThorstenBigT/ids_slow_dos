@@ -13,9 +13,6 @@ spec:
       labels:
         app: node-red
     spec:
-      securityContext:
-        runAsUser: 1000
-        runAsGroup: 27
       containers:
       - name: node-red
         image: nodered/node-red:latest
