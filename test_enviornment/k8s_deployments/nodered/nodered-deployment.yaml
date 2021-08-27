@@ -23,16 +23,21 @@ spec:
           privileged: true
         volumeMounts:
         - name: node-red-data
-          subPathExpr: $(NODE_NAME)
           mountPath: /data
+        - name: node-red-config
+          mountPath: /data/settings.js
+          subPath: settings.js 
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
         - name: TZ
-          value:  Europe/Vienna
+          value: Europe/Berlin
       volumes:
       - name: node-red-data
         persistentVolumeClaim:
-          claimName: node-red-claim
+          claimName: node-red-pvc
+      - name: node-red-config
+        configMap:
+          name: node-red-config
