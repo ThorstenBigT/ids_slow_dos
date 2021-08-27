@@ -5,6 +5,7 @@ metadata:
   labels:
     type: local
 spec:
+  storageClassName: node-red
   volumeMode: Filesystem
   persistentVolumeReclaimPolicy: Delete
   capacity:
