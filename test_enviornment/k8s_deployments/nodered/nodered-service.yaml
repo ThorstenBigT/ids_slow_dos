@@ -10,6 +10,5 @@ spec:
     - name: node-red-ui
       port: 1880
       protocol: TCP
-      targetPort: node-red-ui
-      nodePort: 32010
+      targetPort: 1880
 
