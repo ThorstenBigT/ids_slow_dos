@@ -9,5 +9,5 @@ spec:
   ports:
   - port: 1883
     targetPort: 1883
-    protocol: MQTT
+    protocol: TCP
     nodePort: 30883
