@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1
+
+#Download base image ubuntu 20.04
+FROM ubuntu:20.04
+
+# LABEL about the custom image
+LABEL maintainer="thorsten.steuer@gmx.net"
+LABEL version="0.1"
+LABEL description="This is custom Docker Image to use https://github.com/stfbk/mqttsa"
+
+# Disable Prompt During Packages Installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update Ubuntu Software repository
+RUN apt-get update
+
+RUN apt-get install -y git python3-pip tshark curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt clean
+
+RUN git clone https://github.com/stfbk/mqttsa.git
+WORKDIR /mqttsa
+RUN make
+
+
+
