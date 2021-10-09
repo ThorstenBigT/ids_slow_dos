@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqttsa
+spec:
+  selector:
+    matchLabels:
+      app: mqttsa
+  template:
+    metadata:
+      labels:
+        app: mqttsa
+    spec:
+      containers:
+      - name: mqttsa
+        image: bigt1991/mqttsa:latest
+

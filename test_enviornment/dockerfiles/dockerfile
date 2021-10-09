@@ -22,5 +22,3 @@ RUN git clone https://github.com/stfbk/mqttsa.git
 WORKDIR /mqttsa
 RUN make
 
-
-
