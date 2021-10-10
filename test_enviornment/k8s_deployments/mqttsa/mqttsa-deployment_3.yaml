@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqttsa3
+spec:
+  selector:
+    matchLabels:
+      app: mqttsa3
+  template:
+    metadata:
+      labels:
+        app: mqttsa3
+    spec:
+      containers:
+      - name: mqttsa3
+        image: bigt1991/mqttsa:latest
+        command: ["/bin/sleep", "3650d"]
+        imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+
