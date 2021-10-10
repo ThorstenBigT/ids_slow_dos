@@ -19,3 +19,11 @@ data:
     # Use the `mosquitto_passwd` utility.
     # If TLS is not compiled, plaintext "username:password" lines bay be used
     # password_file /mosquitto/config/passwd
+
+    # The maximum number of client connections to allow. This is
+    # a per listener setting.
+    # Default is -1, which means unlimited connections.
+    # Note that other process limits mean that unlimited connections
+    # are not really possible. Typically the default maximum number of
+    # connections possible is around 1024.
+    max_connections 1024
