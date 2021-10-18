@@ -20,7 +20,7 @@ spec:
         name: neo4j ## Name of container
         env: ## Env variables to pass
           - name: EO4J_ACCEPT_LICENSE_AGREEMENT
-            value: yes
+            value: "yes"
         ports: ## Ports to map
             - containerPort: 7474
               name: http
