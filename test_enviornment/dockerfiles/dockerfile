@@ -14,7 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update Ubuntu Software repository
 RUN apt-get update
 
-RUN apt-get install -y git python3-pip tshark curl && \
+RUN apt-get install -y git python3-pip tshark curl mosquitto-clients && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
 
