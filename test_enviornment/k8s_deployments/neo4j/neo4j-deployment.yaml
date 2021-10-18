@@ -29,14 +29,9 @@ spec:
             - containerPort: 7473
               name: https
         volumeMounts: ## Volumes to mount
-            - name: neo4j-plugins
-              mountPath: "/var/lib/neo4j/plugins"
             - name: neo4j-data
               mountPath: "/var/lib/neo4j/data"
       volumes:
           - name: neo4j-data
             persistentVolumeClaim:
               claimName: neo4j-data-claim
-          - name: neo4j-plugins
-            persistentVolumeClaim:
-              claimName: neo4j-plugin-claim
