@@ -4,11 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-
 pandas = "*"
 neo4j = "*"
+pylint = "*"
+beartype = "*"
 
 [dev-packages]
+ipykernel = "*"
 
 [requires]
 python_version = "3.9"
