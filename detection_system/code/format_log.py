@@ -147,4 +147,5 @@ if __name__ == "__main__":
     print(log_formatter.client_data)
     print(log_formatter.connection_data)
     print(log_formatter.broker_data)
+    local_file.close()
  
