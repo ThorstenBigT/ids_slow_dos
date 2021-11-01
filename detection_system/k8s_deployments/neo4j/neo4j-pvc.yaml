@@ -16,7 +16,7 @@ spec:
   apiVersion: "v1"
   metadata:
     name: neo4j-plugin-claim
-    namespace: test
+    namespace: neo4j
     labels:
       app: neo4j-db
   spec:
