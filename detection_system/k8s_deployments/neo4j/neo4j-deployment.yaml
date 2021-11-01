@@ -19,6 +19,9 @@ spec:
       - name: init-plugins
         image: "appropriate/curl:latest"
         imagePullPolicy: "IfNotPresent"
+        volumeMounts:
+          - name: neo4j-plugins
+            mountPath: /plugins
         command:
           - "/bin/sh"
           - "-c"
@@ -38,10 +41,15 @@ spec:
               name: bolt
             - containerPort: 7473
               name: https
-        volumeMounts: 
+        volumeMounts:
+            - name: neo4j-plugins
+              mountPath: "/var/lib/neo4j/plugins" 
             - name: neo4j-data
               mountPath: "/var/lib/neo4j/data"
       volumes:
           - name: neo4j-data
             persistentVolumeClaim:
               claimName: neo4j-data-claim
+          - name: neo4j-plugins
+            persistentVolumeClaim:
+              claimName: neo4j-plugin-claim

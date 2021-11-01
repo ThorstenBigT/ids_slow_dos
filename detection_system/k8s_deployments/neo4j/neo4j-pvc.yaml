@@ -11,3 +11,17 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+  kind: "PersistentVolumeClaim"
+  apiVersion: "v1"
+  metadata:
+    name: neo4j-plugin-claim
+    namespace: test
+    labels:
+      app: neo4j-db
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
