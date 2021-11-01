@@ -64,7 +64,7 @@ class FormatLog:
                 if client:
                     self.client_data["connection_to_port"] = matches[0]
                 else:
-                    self.broker_data["listener_port"] = matches[0]  
+                    self.broker_data["listener_port"] = matches[0]
             else:
                 print("Functions: extract_port_number_by_row else clause not yet implemeneted")
         else:
