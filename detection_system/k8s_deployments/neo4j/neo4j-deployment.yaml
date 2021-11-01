@@ -19,9 +19,6 @@ spec:
       - name: init-plugins
         image: "appropriate/curl:latest"
         imagePullPolicy: "IfNotPresent"
-        volumeMounts:
-        - name: neo4j-plugins
-          mountPath: /plugins
         command:
           - "/bin/sh"
           - "-c"
