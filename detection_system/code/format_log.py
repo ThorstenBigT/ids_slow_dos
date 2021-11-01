@@ -15,7 +15,7 @@ class FormatLog:
     """
 
     def __init__(self):
-        self.client_data = {"client_ip": None,
+        self.client_data = {"ip_address": None,
                             "connection_to_port": None,
                             "current_time": None
                             }
@@ -38,7 +38,7 @@ class FormatLog:
         if matches:
             print(str(matches[0]))
             if len(matches) == 1:
-                self.client_data["client_ip"] = matches[0]
+                self.client_data["ip_address"] = matches[0]
             else:
                 print("Functions: extract_ip_address_by_row else clause not yet implemeneted")
         else:
