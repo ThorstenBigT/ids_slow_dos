@@ -11,20 +11,22 @@ from local_file_access import LocalFileAccess
 
 class FormatLog:
     """This class contains a collection of regular expression functions to extract data
-    from the log file and stores it as dataframe.
+    from the log file and stores it as dataframe. Set broker ip address default to 127.0.0.01
+    since it can't be read from the log. 
     """
 
     def __init__(self):
         self.client_data = {"ip_address": None,
-                            "connection_to_port": None,
                             "current_time": None
                             }
         self.connection_data ={"status": "inactive",
                                 "current_time": None,
+                                "port": None,
                                 "name": None
                                 }
         self.broker_data = {"listener_port": None,
-                            "version": None
+                            "version": None,
+                            "ip_address": "127.0.0.1"
                             }
 
     @beartype
@@ -62,7 +64,7 @@ class FormatLog:
             print(str(matches[0]))
             if len(matches) == 1:
                 if client:
-                    self.client_data["connection_to_port"] = matches[0]
+                    self.connection_data["port"] = matches[0]
                 else:
                     self.broker_data["listener_port"] = matches[0]
             else:
