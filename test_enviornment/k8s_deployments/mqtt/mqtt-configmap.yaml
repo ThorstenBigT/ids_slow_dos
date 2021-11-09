@@ -5,7 +5,7 @@ metadata:
 data:
   mosquitto.conf: |-
     # Port to use for the default listener.
-    port 1883
+    port 1884
 
     # Allow anonymous users to connect?
     # If not, the password file should be created

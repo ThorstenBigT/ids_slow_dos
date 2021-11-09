@@ -29,10 +29,10 @@ spec:
             curl -L https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/4.3.0.3/apoc-4.3.0.3-all.jar -O
             cp -R apoc-4.3.0.3-all.jar /plugins
       containers:
-      - image: neo4j:4.3.6-enterprise 
+      - image: neo4j:4.3.6-enterprise
         name: neo4j 
         env: 
-          - name: EO4J_ACCEPT_LICENSE_AGREEMENT
+          - name: NEO4J_ACCEPT_LICENSE_AGREEMENT
             value: "yes"
         ports: 
             - containerPort: 7474

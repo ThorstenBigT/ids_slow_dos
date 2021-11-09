@@ -7,7 +7,7 @@ spec:
     app: mosquitto
   type: LoadBalancer
   ports:
-  - port: 1883
-    targetPort: 1883
+  - port: 1884
+    targetPort: 1884
     protocol: TCP
-    nodePort: 30883
+    nodePort: 30884
