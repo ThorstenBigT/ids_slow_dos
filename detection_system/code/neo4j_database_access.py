@@ -79,11 +79,11 @@ class Neo4jDatabaseAccess:
             result = session.write_transaction(
                 self._create_and_return_connection, connection_json)
             for record in result:
-                print(f'Created connection node: {record["c1"]}')
+                print(f'Created connection: {record["c1"]}')
 
     @staticmethod
     def _create_and_return_connection(transax, connection_json: str):
-        '''Executes a create statement and loads in json data.
+        '''Executes a create statement and loads in json data for new connection.
 
         Args:
             transax (driver.session): seesion object to execute the query
@@ -120,7 +120,7 @@ class Neo4jDatabaseAccess:
             result = session.write_transaction(
                 self._create_and_return_broker, broker_json)
             for record in result:
-                print(f'Created broker node: {record["b1"]}')
+                print(f'Created broker node: {record["b"]}')
 
     @staticmethod
     def _create_and_return_broker(transax, broker_json: str):
@@ -135,14 +135,14 @@ class Neo4jDatabaseAccess:
         '''
         query = (
             'WITH apoc.convert.fromJsonMap(\"'+ broker_json +'\") as broker_data '
-            'CREATE (b1:Broker { listener_port: broker_data.listener_port, '
+            'CREATE (b:Broker { listener_port: broker_data.listener_port, '
                                 'ip_address: broker_data.ip_address,'
                                 'version: broker_data.version }) '
-            'RETURN b1'
+            'RETURN b'
         )
         result = transax.run(query)
         try:
-            return [{'b1': record['b1']['ip_address']}
+            return [{'b': record['b']['ip_address']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
@@ -339,10 +339,102 @@ class Neo4jDatabaseAccess:
             logging.error('%s raised an error: \n %s', query, exception)
             raise
 
+
+    @beartype
+    def update_connection_status(self, connection_name: str, status: str):
+        """Updates the status of a connection to active or inactive
+
+        Args:
+            connection_name (str): name of the connection to be updated
+            status (str): status to be set for the connection
+        """
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._update_and_return_connection_status, connection_name, status)
+        for record in result:
+            print(f'Updated Connection Status: {record}')
+
+    @staticmethod
+    @beartype
+    def _update_and_return_connection_status(transax, connection_name: str, status: str):
+        """Executes the update query for a specific connection.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            connection_name (str): the connection to be updated
+            status (str): the status to be set for the speficied conenction
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        """
+        query = (
+                'MATCH (c:Connection {name: "' + connection_name + '"}) '
+                'SET c.status = "' + status + '" '
+                'RETURN c'
+                )
+        result = transax.run(query)
+        try:
+            return [{'c': record['c']['name']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def update_connnection_time(self, connection_name: str, time: str):
+        """Updates the time of a connection to active or inactive
+
+        Args:
+            connection_name (str): name of the connection to be updated
+            time (str): time to be set for the connection
+        """
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._update_and_return_connection_time, connection_name, time)
+        for record in result:
+            print(f'Updated Connection Time: {record}')
+
+    @staticmethod
+    @beartype
+    def _update_and_return_connection_time(transax, connection_name: str, time: str):
+        """Executes the update query for a specific connection.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            connection_name (str): the connection to be updated
+            time (str): the time to be set for the speficied conenction
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        """
+        query = (
+                'MATCH (c:Connection {name: "' + connection_name + '"}) '
+                'SET c.current_time = "' + time + '" '
+                'RETURN c'
+                )
+        result = transax.run(query)
+        try:
+            return [{'c': record['c']['name']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+
     @staticmethod
     @beartype
     def _format_property_name_comma_list(data: List[str], short_name: str):
+        """Format property name from list to chyper query snytax
 
+        Args:
+            data (List[str]): a list of property name strings
+            short_name (str): the acronmy use in the chyper query
+
+        Returns:
+            [str]: a string containing the property names in the proper chyper format
+        """
         if len(data) == 1:
             return '(' + short_name + '.' + data[0] + ')'
         else:
@@ -356,7 +448,16 @@ class Neo4jDatabaseAccess:
     @staticmethod
     @beartype
     def _format_json_array_to_where_clause(node1: dict, node2: dict):
+        """Format the two node description jason the a where clause to create
+        a realtion between two nodes.
 
+        Args:
+            node1 (dict): description of the first node to match
+            node2 (dict): description of the second node to match
+
+        Returns:
+            [str]: properly formated chyper where clause
+        """
         if len(node1['property_names']) == 1 and node2['property_names'] == 1:
             where_clause=(
                 'WHERE a.' + node1['property_names'][0] + '=\"' + node1['property_values'][0] + '\" '
@@ -401,22 +502,22 @@ if __name__ == '__main__':
                                                 "property_names": ["ip_address", "listener_port", "version"],
                                                 "property_values": ["127.0.0.1", "1883", "1.6.9"]}
                                     }'''
-    DISCONNECTS_FROM_DATA_TEST = '''{"edge_name": "DISCONNECTS_FROM",
-                                    "node1": {  "name":"Connection",
-                                                "property_names": ["name"],
-                                                "property_values": ["mqtt-explorer-0a61e6f1"]},
-                                    "node2": {  "name":"Client",
-                                                "property_names": ["ip_address"],
-                                                "property_values": ["127.0.0.1"]}
-                                    }'''
-    STARTS_DISCONNECTION_DATA_TEST = '''{"edge_name": "STARTS_DISCONNECTION",
-                                    "node1": {  "name":"Broker",
-                                                "property_names": ["ip_address", "listener_port", "version"],
-                                                "property_values": ["127.0.0.1", "1883", "1.6.9"]},
-                                    "node2": {  "name":"Connection",
-                                                "property_names": ["name"],
-                                                "property_values": ["mqtt-explorer-0a61e6f1"]}
-                                    }'''
+    # DISCONNECTS_FROM_DATA_TEST = '''{"edge_name": "DISCONNECTS_FROM",
+    #                                "node1": {  "name":"Connection",
+    #                                            "property_names": ["name"],
+    #                                            "property_values": ["mqtt-explorer-0a61e6f1"]},
+    #                                "node2": {  "name":"Client",
+    #                                            "property_names": ["ip_address"],
+    #                                            "property_values": ["127.0.0.1"]}
+    #                                }'''
+    #STARTS_DISCONNECTION_DATA_TEST = '''{"edge_name": "STARTS_DISCONNECTION",
+    #                                "node1": {  "name":"Broker",
+    #                                            "property_names": ["ip_address", "listener_port", "version"],
+    #                                            "property_values": ["127.0.0.1", "1883", "1.6.9"]},
+    #                                "node2": {  "name":"Connection",
+    #                                            "property_names": ["name"],
+    #                                            "property_values": ["mqtt-explorer-0a61e6f1"]}
+    #                                }'''
     NEO4J_URI = 'bolt://localhost:7687'
     NEO4J_USER = 'neo4j'
     NEO4J_PASS = 'gh1KLaqw'
@@ -440,6 +541,9 @@ if __name__ == '__main__':
 
     neo4j_driver.create_edge(STARTS_CONNECTION_DATA_TEST)
     neo4j_driver.create_edge(CONNECTS_TO_DATA_TEST)
-    neo4j_driver.create_edge(STARTS_DISCONNECTION_DATA_TEST)
-    neo4j_driver.create_edge(DISCONNECTS_FROM_DATA_TEST)
+    neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', 'active')
+    neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', '1635015166')
+    # Probably won't need this since I can query inactive connections anyhow.
+    # neo4j_driver.create_edge(STARTS_DISCONNECTION_DATA_TEST)
+    # neo4j_driver.create_edge(DISCONNECTS_FROM_DATA_TEST)
     neo4j_driver.close()
