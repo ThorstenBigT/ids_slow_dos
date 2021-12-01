@@ -26,15 +26,21 @@ class AlarmNotification:
     def __init__(self):
         """[summary]
         """
-        self.email_server = smtplib.SMTP(host='mail.gmx.net', port=587)
-        self.email_server.starttls()
-        self.email_server.login(EMAIL, EMAIL_PASS)
+        dummy = 'dummy'
 
     @beartype
     def stop_smtp(self):
         """[summary]
         """
         self.email_server.quit()
+
+    @beartype
+    def connect_to_smtp_server(self):
+        """[summary]
+        """
+        self.email_server = smtplib.SMTP(host='mail.gmx.net', port=587)
+        self.email_server.starttls()
+        self.email_server.login(EMAIL, EMAIL_PASS)
 
     @beartype
     def send_email(self, message: str):
@@ -53,5 +59,6 @@ class AlarmNotification:
 
 if __name__ == '__main__':
     email_server = AlarmNotification()
+    email_server.connect_to_smtp_server()
     email_server.send_email("TEST")
     email_server.stop_smtp()

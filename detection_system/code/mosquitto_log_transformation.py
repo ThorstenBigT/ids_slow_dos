@@ -134,5 +134,7 @@ if __name__ == "__main__":
                         message = message + '\n'
 
                 if message != "":
+                    email_notification.connect_to_smtp_server()
                     email_notification.send_email(message)
+                    email_notification.stop_smtp()
                     block = True
