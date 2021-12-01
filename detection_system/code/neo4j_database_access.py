@@ -1,4 +1,5 @@
 '''This module handles CRUD operation for the Neo4j database.
+https://neo4j.com/docs/api/python-driver/current/#quick-example
 '''
 import logging
 from typing import List
@@ -13,7 +14,7 @@ class Neo4jDatabaseAccess:
     '''This class is initialies with a neo4j database driver to communicate
     with the neo4j database instance.
     '''
-
+    @beartype
     def __init__(self, uri: str, user: str, password: str):
         '''Consturctor to initialize the class with a database connection.
 
@@ -381,14 +382,40 @@ class Neo4jDatabaseAccess:
             logging.error('%s raised an error: \n %s', query, exception)
             raise
 
+
     @beartype
-    def update_connnection_time(self, connection_name: str, time: str):
-        """Updates the time of a connection to active or inactive
+    def update_and_return_client_block(self, connection_name: str, status: str):
+        """Updates the status of a connection to active or inactive
 
         Args:
             connection_name (str): name of the connection to be updated
-            time (str): time to be set for the connection
+            status (str): status to be set for the connection
         """
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._update_and_return_connection_status, connection_name, status)
+        for record in result:
+            print(f'Updated Connection Status: {record}')
+
+    @staticmethod
+    @beartype
+    def _update_and_return_client_block(transax, connection_name: str, status: str):
+        query = (
+                'MATCH (c:Connection {name: "' + connection_name + '"}) '
+                'SET c.status = "' + status + '" '
+                'RETURN c'
+                )
+        result = transax.run(query)
+        try:
+            return [{'c': record['c']['name']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def update_connnection_time(self, connection_name: str, time: str):
         with self.driver.session() as session:
             result = session.write_transaction(
                 self._update_and_return_connection_time, connection_name, time)
@@ -417,6 +444,41 @@ class Neo4jDatabaseAccess:
         try:
             return [{'c': record['c']['name']}
                     for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def execute_and_return_query_result(self, query: str):
+        """Execute a query based on the chyper string provided
+
+        Args:
+            query (str): a chyper query
+
+        Returns:
+            result (list): a list of dictonary each row of the result a dict
+        """
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._execute_and_return_query_result, query)
+            return result
+
+    @staticmethod
+    @beartype
+    def _execute_and_return_query_result(transax, query):
+        """Exectues a query provided by the query parameter
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            query (str): a chyper query
+
+        Returns:
+            [type]: [description]
+        """
+        result = transax.run(query)
+        try:
+            return result.data()
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
             logging.error('%s raised an error: \n %s', query, exception)
@@ -502,22 +564,6 @@ if __name__ == '__main__':
                                                 "property_names": ["ip_address", "listener_port", "version"],
                                                 "property_values": ["127.0.0.1", "1883", "1.6.9"]}
                                     }'''
-    # DISCONNECTS_FROM_DATA_TEST = '''{"edge_name": "DISCONNECTS_FROM",
-    #                                "node1": {  "name":"Connection",
-    #                                            "property_names": ["name"],
-    #                                            "property_values": ["mqtt-explorer-0a61e6f1"]},
-    #                                "node2": {  "name":"Client",
-    #                                            "property_names": ["ip_address"],
-    #                                            "property_values": ["127.0.0.1"]}
-    #                                }'''
-    #STARTS_DISCONNECTION_DATA_TEST = '''{"edge_name": "STARTS_DISCONNECTION",
-    #                                "node1": {  "name":"Broker",
-    #                                            "property_names": ["ip_address", "listener_port", "version"],
-    #                                            "property_values": ["127.0.0.1", "1883", "1.6.9"]},
-    #                                "node2": {  "name":"Connection",
-    #                                            "property_names": ["name"],
-    #                                            "property_values": ["mqtt-explorer-0a61e6f1"]}
-    #                                }'''
     NEO4J_URI = 'bolt://localhost:7687'
     NEO4J_USER = 'neo4j'
     NEO4J_PASS = 'gh1KLaqw'
@@ -543,7 +589,15 @@ if __name__ == '__main__':
     neo4j_driver.create_edge(CONNECTS_TO_DATA_TEST)
     neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', 'active')
     neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', '1635015166')
-    # Probably won't need this since I can query inactive connections anyhow.
-    # neo4j_driver.create_edge(STARTS_DISCONNECTION_DATA_TEST)
-    # neo4j_driver.create_edge(DISCONNECTS_FROM_DATA_TEST)
+
+    count_query = (
+            'MATCH (c:Client)-[r:STARTS_CONNECTION]->() '
+            'RETURN c, count(r) as count'
+             )
+    count_result = neo4j_driver.execute_and_return_query_result(count_query)
+
+    if count_result is not None:
+        for records in count_result:
+            print(records)
+
     neo4j_driver.close()

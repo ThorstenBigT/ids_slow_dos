@@ -1,8 +1,12 @@
 """Module to handel the mosquitto log to import it to neo4j
+    Author: Thorsten Steuer
+    Licence: Apache 2.0
 """
+from email import message
 from local_file_access import LocalFileAccess
 from format_log import FormatLog
 from neo4j_database_access import Neo4jDatabaseAccess
+from alarm_notification import AlarmNotification
 
 LOCAL_PATH = "C:/Program Files/mosquitto"
 FILE_NAME = "mosquitto.log"
@@ -16,6 +20,7 @@ if __name__ == "__main__":
     local_file = LocalFileAccess(LOCAL_PATH, FILE_NAME)
     log_formatter = FormatLog()
     neo4j_driver = Neo4jDatabaseAccess(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
+    email_notification = AlarmNotification()
 
     loglines =  local_file.tail_file()
     for current_line in loglines:
@@ -58,7 +63,7 @@ if __name__ == "__main__":
             if not neo4j_driver.check_if_constraint_exists('Broker', ['ip_address', 'version', 'listener_port']):
                 neo4j_driver.create_unique_property_constraint('Broker', ['ip_address', 'version', 'listener_port'])
 
-        if log_formatter.connection_data['name'] != None:
+        if log_formatter.connection_data['name'] is not None:
 
             if "New client connected" in current_line:
                 log_formatter.set_connection_status("active")
@@ -112,3 +117,20 @@ if __name__ == "__main__":
         # Keep this here so the default value of the connection is set again
         log_formatter.set_connection_status("active")
 
+        if not log_formatter['block']:
+            query = (
+                    'MATCH (cl:Client)-[r:STARTS_CONNECTION]->(c:Connection) '
+                    'WHERE c.status = "active"'
+                    'RETURN cl,count(r) as count'
+                    )
+            result = neo4j_driver.execute_and_return_query_result(query)
+            if result is not None:
+                message = ""
+                for row in result:
+                    if row['count'] > 50:
+                        message = message + 'Client ' + row['cl']['ip_address'] + ' has ' +  str(row['count']) + ' active connections'
+                        message = message + '\n'
+
+                if message != "":
+                    email_notification.send_email(message)
+                    log_formatter.set_block_client(True)
