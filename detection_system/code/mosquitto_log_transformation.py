@@ -22,6 +22,8 @@ if __name__ == "__main__":
     neo4j_driver = Neo4jDatabaseAccess(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
     email_notification = AlarmNotification()
 
+    block = False
+
     loglines =  local_file.tail_file()
     for current_line in loglines:
 
@@ -117,7 +119,7 @@ if __name__ == "__main__":
         # Keep this here so the default value of the connection is set again
         log_formatter.set_connection_status("active")
 
-        if not log_formatter['block']:
+        if not block:
             query = (
                     'MATCH (cl:Client)-[r:STARTS_CONNECTION]->(c:Connection) '
                     'WHERE c.status = "active"'
@@ -133,4 +135,4 @@ if __name__ == "__main__":
 
                 if message != "":
                     email_notification.send_email(message)
-                    log_formatter.set_block_client(True)
+                    block = True

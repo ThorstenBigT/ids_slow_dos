@@ -17,9 +17,10 @@ class FormatLog:
     """
 
     def __init__(self):
+        """HAVE TO CHANGE THIS AGAIN DOES NOT REALLY MAKE SENSE
+        """
         self.client_data = {"ip_address": None,
-                            "current_time": None,
-                            "block": False
+                            "current_time": None
                             }
         self.connection_data ={"status": "active",
                                 "current_time": None,
@@ -136,26 +137,15 @@ class FormatLog:
         """
         self.broker_data["ip_address"] = ip_address
 
-    beartype
-    def set_block_client(self, block: bool):
-        """Set bool to block client if it creates to many active connections
-
-        Args:
-            block (bool): set to true if client should be blocked
-        """
-        self.client_data["block"] = block
-
     def reset_client_data(self):
         """Set values of client_data json to None
         """
-        self.client_data = dict.fromkeys(self.client_data, None)
+        self.connection_data = dict.fromkeys(self.connection_data, None)
 
     def reset_connection_data(self):
-        """Set values of client_data json to None. Only set ip_address 
-        and current_time to none to keep track if client is blocked. 
+        """Set values of connection_data json to None
         """
-        self.connection_data['ip_address'] = None
-        self.connection_data['current_time'] = None
+        self.connection_data = dict.fromkeys(self.connection_data, None)
 
     def reset_broker_data(self):
         """Set values of client_data json to None
