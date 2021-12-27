@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+
+#Download base image ubuntu 20.04
+FROM ubuntu:20.04
+
+# LABEL about the custom image
+LABEL maintainer="thorsten.steuer@gmx.net"
+LABEL version="0.1"
+LABEL description="This is custom Docker Image to run"
+
+# Disable Prompt During Packages Installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update Ubuntu Software repository
+RUN apt-get update
+
+# Install git python pipenv 
+RUN apt-get install -y git python3-pip
+RUN pip install pipenv
+
+# Install python packages
+RUN git clone https://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@github.com/ThorstenBigT/ids_slow_dos.git
+WORKDIR /ids_slow_dos/
+RUN pipenv install --system

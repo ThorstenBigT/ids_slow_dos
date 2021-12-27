@@ -22,3 +22,5 @@ data:
     log_type notice
     log_type information
 
+    log_dest file /mosquitto/log/mosquitto.log
+

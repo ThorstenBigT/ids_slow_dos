@@ -53,3 +53,5 @@ spec:
           - name: neo4j-plugins
             persistentVolumeClaim:
               claimName: neo4j-plugin-claim
+      nodeSelector:
+        kubernetes.io/hostname: kind-worker2

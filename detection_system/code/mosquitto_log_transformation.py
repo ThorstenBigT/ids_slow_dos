@@ -10,7 +10,7 @@ from alarm_notification import AlarmNotification
 
 LOCAL_PATH = "C:/Program Files/mosquitto"
 FILE_NAME = "mosquitto.log"
-NEO4J_URI = 'bolt://localhost:7687'
+NEO4J_URI = 'bolt://localhost:30687'
 NEO4J_USER = 'neo4j'
 NEO4J_PASS = 'gh1KLaqw'
 

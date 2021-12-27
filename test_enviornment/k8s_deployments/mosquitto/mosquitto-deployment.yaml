@@ -21,7 +21,7 @@ spec:
             memory: "128Mi"
             cpu: "500m"
         ports:
-        - containerPort: 1883
+        - containerPort: 1884
         volumeMounts:
             - name: mosquitto-config
               mountPath: /mosquitto/config/mosquitto.conf
