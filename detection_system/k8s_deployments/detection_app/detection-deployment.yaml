@@ -25,6 +25,5 @@ spec:
         hostPath:
           path: /var/local-path-provisioner/pvc-2e5435e5-eee2-4a95-ba44-5a4c5ffb6153_default_detection-app-pvc
           type: Directory
-      nodeSelector:
-        kubernetes.io/hostname: kind-worker2
+
          

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto-broker
+  labels:
+    app: mosquitto-broker
+spec:
+  selector:
+    matchLabels:
+      app: mosquitto-broker
+  template:
+    metadata:
+      labels:
+        app: mosquitto-broker
+    spec:
+      containers:
+      - image: bigt1991/mosquitto-broker
+        name: mosquitto-broker
+        ports:
+          - containerPort: 1883

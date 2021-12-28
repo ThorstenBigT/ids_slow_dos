@@ -41,5 +41,4 @@ spec:
       - name: node-red-config
         configMap:
           name: node-red-config
-      nodeSelector:
-        kubernetes.io/hostname: kind-worker
+

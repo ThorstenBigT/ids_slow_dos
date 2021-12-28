@@ -14,9 +14,21 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update Ubuntu Software repository
 RUN apt-get update
 
-RUN apt-get install -y git vim curl mosquitto mosquitto-clients dos2unix && \
+RUN apt-get install -y git vim curl mosquitto mosquitto-clients dos2unix cron && \
     rm -rf /var/lib/apt/lists/* && \
     apt clean
+
+# Bash Script to monitor CPU usage of mosquitto process   
+COPY resource_monitoring_v2.sh /var/lib/mosquitto_monitoring/resource_monitoring_v2.sh
+RUN dos2unix /var/lib/mosquitto_monitoring/resource_monitoring_v2.sh
+RUN chmod +x /var/lib/mosquitto_monitoring/resource_monitoring_v2.sh
+
+# Add crontab to start cron job
+COPY crontab_backup /var/lib/mosquitto_monitoring/crontab_backup
+RUN dos2unix /var/lib/mosquitto_monitoring/crontab_backup
+RUN chmod 0644 /var/lib/mosquitto_monitoring/crontab_backup -R
+RUN crontab /var/lib/mosquitto_monitoring/crontab_backup
+RUN touch /var/log/cron.log
 
 # Provide access to mosquitto log file
 RUN touch /var/log/mosquitto/mosquitto.log
@@ -27,9 +39,9 @@ RUN chmod 760 /var/log/mosquitto/mosquitto.log -R
 COPY mosquitto.conf /var/lib/mosquitto/mosquitto.conf
 
 # Copy start.sh script
-COPY start.sh /start.sh
-RUN chmod 777 start.sh
+COPY start_v2.sh /start_v2.sh
+RUN chmod 777 start_v2.sh
 
-CMD ["/start.sh"]
+CMD ["bin/bash","/start_v2.sh"]
 
 EXPOSE 1883

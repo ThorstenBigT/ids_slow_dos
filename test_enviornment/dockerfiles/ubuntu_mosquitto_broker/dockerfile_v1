@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1
+
+#Download base image ubuntu 20.04
+FROM ubuntu:20.04
+
+# LABEL about the custom image
+LABEL maintainer="thorsten.steuer@gmx.net"
+LABEL version="0.1"
+LABEL description="This is custom Docker Image to run a mosquitto borker and stop the broker once it uses to much CPU"
+
+# Disable Prompt During Packages Installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update Ubuntu Software repository
+RUN apt-get update
+
+RUN apt-get install -y git vim curl mosquitto mosquitto-clients dos2unix && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt clean
+
+# Bash Script to monitor CPU usage of mosquitto process   
+COPY resource_monitoring_v1.sh /var/lib/mosquitto_monitoring/resource_monitoring_v1.sh
+RUN dos2unix /var/lib/mosquitto_monitoring/resource_monitoring_v1.sh
+RUN chmod +x /var/lib/mosquitto_monitoring/resource_monitoring_v1.sh
+
+# Provide access to mosquitto log file
+RUN touch /var/log/mosquitto/mosquitto.log
+RUN chown root:mosquitto /var/log/mosquitto/mosquitto.log -R
+RUN chmod 760 /var/log/mosquitto/mosquitto.log -R
+
+# Mosquitto config file
+COPY mosquitto.conf /var/lib/mosquitto/mosquitto.conf
+
+# Copy start.sh script
+COPY start_v1.sh /start_v1.sh
+RUN chmod 777 start_v1.sh
+
+CMD ["bin/bash","/start_v1.sh"]
+
+EXPOSE 1883
