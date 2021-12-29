@@ -4,7 +4,6 @@ metadata:
   labels:
     app: neo4j-db 
   name: neo4j-db 
-  namespace: neo4j 
 spec:
   replicas: 1
   selector:

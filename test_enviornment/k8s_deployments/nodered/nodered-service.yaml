@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     app: node-red
-  type: LoadBalancer
+  type: NodePort
   ports:
     - name: node-red-ui
       port: 1880

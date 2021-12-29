@@ -16,14 +16,14 @@ spec:
         image: bigt1991/python-container-detection-app:latest
         volumeMounts:
         - name: mosquitto-log-pv
-          mountPath: /mosquitto 
+          mountPath: /mosquitto/log
         imagePullPolicy: IfNotPresent
         command: ["/bin/sleep", "3650d"]
       restartPolicy: Always
       volumes:
       - name: mosquitto-log-pv
-        hostPath:
-          path: /var/local-path-provisioner/pvc-2e5435e5-eee2-4a95-ba44-5a4c5ffb6153_default_detection-app-pvc
-          type: Directory
+        persistentVolumeClaim:
+          claimName: mosquitto-log-pvc
+        
 
          

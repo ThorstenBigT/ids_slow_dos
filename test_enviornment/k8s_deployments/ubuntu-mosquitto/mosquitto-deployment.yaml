@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto-broker
+  labels:
+    app: mosquitto-broker
+spec:
+  selector:
+    matchLabels:
+      app: mosquitto-broker
+  template:
+    metadata:
+      labels:
+        app: mosquitto-broker
+    spec:
+      containers:
+      - name: mosquitto-broker
+        image: bigt1991/mosquitto-broker
+        ports:
+        - containerPort: 1883
+        volumeMounts:
+        - name: mosquitto-log
+          mountPath: /var/log/mosquitto/
+      volumes:
+      - name: mosquitto-log
+        persistentVolumeClaim:
+          claimName: mosquitto-log-pvc

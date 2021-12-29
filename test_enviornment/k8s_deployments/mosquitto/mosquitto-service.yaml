@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     app: mosquitto
-  type: LoadBalancer
+  type: NodePort
   ports:
   - port: 1884
     targetPort: 1884
