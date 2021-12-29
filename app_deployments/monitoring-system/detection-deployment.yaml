@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: detection-app
+  name: detection-app
+  namespace: monitoring-system
+spec:
+  selector:
+    matchLabels:
+      app: detection-app
+  template:
+    metadata:
+      labels:
+        app: detection-app
+    spec:
+      containers:
+      - name: detection-app
+        image: bigt1991/python-container-detection-app:latest
+        volumeMounts:
+        - name: mosquitto-log-pv
+          mountPath: /mosquitto/log
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sleep", "3650d"]
+      restartPolicy: Always
+      volumes:
+      - name: mosquitto-log-pv
+        persistentVolumeClaim:
+          claimName: mosquitto-log-pvc
+        
+
+         

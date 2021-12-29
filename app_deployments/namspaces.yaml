@@ -1,0 +1,20 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: monitoring-system
+  labels:
+    name: monitoring-system
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: slowDos-attacker
+  labels:
+    name: slowDos-attacker
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: rooms
+  labels:
+    name: rooms

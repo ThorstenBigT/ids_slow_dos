@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto-broker-service
+  namespace: monitoring-system
+spec:
+  selector:
+    app: mosquitto-broker
+  type: NodePort
+  ports:
+  - port: 1883
+    targetPort: 1883
+    protocol: TCP
+    nodePort: 30883

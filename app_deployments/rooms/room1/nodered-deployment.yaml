@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-red-room1
+  labels:
+    app: node-red-room1
+  namespace: rooms
+spec:
+  selector:
+    matchLabels:
+      app: node-red-room1
+  template:
+    metadata:
+      labels:
+        app: node-red-room1
+    spec:
+      containers:
+      - name: node-red-room1
+        image: nodered/node-red:latest
+        ports:
+        - containerPort: 1880
+          name: node-red-ui
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: node-red-data-room1
+          mountPath: /data
+        - name: node-red-config
+          mountPath: /data/settings.js
+          subPath: settings.js 
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: TZ
+          value: Europe/Berlin
+      volumes:
+      - name: node-red-data-room1
+        persistentVolumeClaim:
+          claimName: node-red-room1-pvc
+      - name: node-red-config
+        configMap:
+          name: node-red-config
+
