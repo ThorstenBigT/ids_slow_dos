@@ -20,7 +20,7 @@ spec:
         - containerPort: 1883
         volumeMounts:
         - name: mosquitto-log
-          mountPath: /var/log/mosquitto/
+          mountPath: /var/log/mosquitto
       volumes:
       - name: mosquitto-log
         persistentVolumeClaim:

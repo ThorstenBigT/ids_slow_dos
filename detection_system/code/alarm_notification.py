@@ -11,32 +11,24 @@ from email.message import EmailMessage
 
 from beartype import beartype
 
-NEO4J_URI = 'bolt://localhost:7687'
-NEO4J_USER = 'neo4j'
-NEO4J_PASS = 'gh1KLaqw'
-# CHANGE PASSWORDS BEFORE PUBLISHING!!!!!!!!!!!!!!!!!!!!!!!!!!!
-EMAIL = 'thorsten.steuer@gmx.net'
-EMAIL_PASS ='gh!KLaqw'
+
+EMAIL = 'ids_masterarbeit@gmx.at'
+EMAIL_PASS ='Uq62/x~!4,5*cjK,'
 EMAIL_SUBJECT = 'INTRUSION DETECTED!!!!'
 
 class AlarmNotification:
-    """[summary]
+    """ A class to send a Email Message once an intrusion was detected.
     """
-    @beartype
-    def __init__(self):
-        """[summary]
-        """
-        dummy = 'dummy'
 
     @beartype
     def stop_smtp(self):
-        """[summary]
+        """Stop smtp client.
         """
         self.email_server.quit()
 
     @beartype
     def connect_to_smtp_server(self):
-        """[summary]
+        """Connects to a smtp sever.
         """
         self.email_server = smtplib.SMTP(host='mail.gmx.net', port=587)
         self.email_server.starttls()
@@ -44,7 +36,7 @@ class AlarmNotification:
 
     @beartype
     def send_email(self, message: str):
-        """[summary]
+        """Is Sending an Email with the provided message string. 
 
         Args:
             message (str): [description]

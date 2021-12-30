@@ -20,7 +20,9 @@ class FormatLog:
         """HAVE TO CHANGE THIS AGAIN DOES NOT REALLY MAKE SENSE
         """
         self.client_data = {"ip_address": None,
-                            "current_time": None
+                            "current_time": None,
+                            "is_blocked": False,
+                            "notification_sent": False
                             }
         self.connection_data ={"status": "active",
                                 "current_time": None,
@@ -141,6 +143,18 @@ class FormatLog:
         """Set values of client_data json to None
         """
         self.connection_data = dict.fromkeys(self.connection_data, None)
+
+    @beartype
+    def set_client_is_blocked(self, is_blocked: bool):
+        """Set values of is_blocked in client json to false or ture.
+        """
+        self.client_data["is_blocked"] = is_blocked
+    
+    @beartype
+    def set_client_notification_sent(self, sent: bool):
+        """Set values of is_blocked in client json to false or ture.
+        """
+        self.client_data["notification_sent"] = sent
 
     def reset_connection_data(self):
         """Set values of connection_data json to None

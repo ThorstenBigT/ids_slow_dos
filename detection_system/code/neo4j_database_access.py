@@ -57,7 +57,9 @@ class Neo4jDatabaseAccess:
         query = (
             'WITH apoc.convert.fromJsonMap(\"'+ client_json +'\") as client_data '
             'CREATE (c1:Client { ip_address: client_data.ip_address, '
-                                'current_time: client_data.current_time })'
+                                'current_time: client_data.current_time, '
+                                'notification_sent: client_data.notification_sent, '
+                                'is_blocked: client_data.is_blocked })'
             'RETURN c1'
         )
         result = transax.run(query)
@@ -382,32 +384,64 @@ class Neo4jDatabaseAccess:
             logging.error('%s raised an error: \n %s', query, exception)
             raise
 
-
     @beartype
-    def update_and_return_client_block(self, connection_name: str, status: str):
-        """Updates the status of a connection to active or inactive
+    def update_and_return_client_block(self, ip_address: str, is_blocked: bool):
+        """ Updates the block status of a client. Will be set to True if a clients
+            creates to many active connections.
 
         Args:
-            connection_name (str): name of the connection to be updated
-            status (str): status to be set for the connection
+            ip_address (str): ip_address of the client to be blocked
+            is_blocked (bool): state of the block status (True/False)
         """
         with self.driver.session() as session:
             result = session.write_transaction(
-                self._update_and_return_connection_status, connection_name, status)
+                self._update_and_return_client_block, ip_address, is_blocked)
         for record in result:
-            print(f'Updated Connection Status: {record}')
+            print(f'Updated block status of client: {record}')
 
     @staticmethod
     @beartype
-    def _update_and_return_client_block(transax, connection_name: str, status: str):
+    def _update_and_return_client_block(transax, ip_address: str, is_blocked: bool):
         query = (
-                'MATCH (c:Connection {name: "' + connection_name + '"}) '
-                'SET c.status = "' + status + '" '
+                'MATCH (c:Client {ip_address: "' + ip_address + '"}) '
+                'SET c.is_blocked = "' + is_blocked + '" '
                 'RETURN c'
                 )
         result = transax.run(query)
         try:
-            return [{'c': record['c']['name']}
+            return [{'c': record['c']['ip_address']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def update_and_return_client_notification_sent(self, ip_address: str, sent: bool):
+        """ Updates the notification status of a client. Once it was blocked an email
+        is sent to the admin to notify the attack.
+
+        Args:
+            ip_address (str): ip_address of the client to be blocked
+            sent (bool): state of the notification status (True/False)
+        """
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._update_and_return_client_notification_sent, ip_address, sent)
+        for record in result:
+            print(f'Updated block status of client: {record}')
+
+    @staticmethod
+    @beartype
+    def _update_and_return_client_notification_sent(transax, ip_address: str, sent: bool):
+        query = (
+                'MATCH (c:Client {ip_address: "' + ip_address + '"}) '
+                'SET c.notification_sent = "' + sent + '" '
+                'RETURN c'
+                )
+        result = transax.run(query)
+        try:
+            return [{'c': record['c']['ip_address']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:

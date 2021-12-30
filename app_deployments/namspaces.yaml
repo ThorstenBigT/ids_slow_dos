@@ -8,9 +8,9 @@ metadata:
 kind: Namespace
 apiVersion: v1
 metadata:
-  name: slowDos-attacker
+  name: slowdos-attacker
   labels:
-    name: slowDos-attacker
+    name: slowdos-attacker
 ---
 kind: Namespace
 apiVersion: v1
