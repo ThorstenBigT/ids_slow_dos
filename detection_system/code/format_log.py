@@ -17,15 +17,16 @@ class FormatLog:
     """
 
     def __init__(self):
-        """HAVE TO CHANGE THIS AGAIN DOES NOT REALLY MAKE SENSE
+        """Interface to extract information from the log file. I need to use string as booleans
+        since json expext them to be wirtten small an neo4j can handel the conversion.
         """
         self.client_data = {"ip_address": None,
-                            "current_time": None,
-                            "is_blocked": False,
-                            "notification_sent": False
+                            "creation_time": None,
+                            "is_blocked": "False",
+                            "notification_sent": "False"
                             }
         self.connection_data ={"status": "active",
-                                "current_time": None,
+                                "last_update_time": None,
                                 "name": None
                                 }
         self.broker_data = {"listener_port": None,
@@ -82,8 +83,8 @@ class FormatLog:
         """
         groups = log_string.split(":")
         if groups:
-            self.client_data["current_time"] = groups[0]
-            self.connection_data["current_time"] = groups[0]
+            self.client_data["creation_time"] = groups[0]
+            self.connection_data["last_update_time"] = groups[0]
 
         else:
             logging.info("Could not split group missing ':' in: %s", log_string)
@@ -145,13 +146,13 @@ class FormatLog:
         self.connection_data = dict.fromkeys(self.connection_data, None)
 
     @beartype
-    def set_client_is_blocked(self, is_blocked: bool):
+    def set_client_is_blocked(self, is_blocked: str):
         """Set values of is_blocked in client json to false or ture.
         """
         self.client_data["is_blocked"] = is_blocked
     
     @beartype
-    def set_client_notification_sent(self, sent: bool):
+    def set_client_notification_sent(self, sent: str):
         """Set values of is_blocked in client json to false or ture.
         """
         self.client_data["notification_sent"] = sent

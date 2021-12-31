@@ -57,7 +57,7 @@ class Neo4jDatabaseAccess:
         query = (
             'WITH apoc.convert.fromJsonMap(\"'+ client_json +'\") as client_data '
             'CREATE (c1:Client { ip_address: client_data.ip_address, '
-                                'current_time: client_data.current_time, '
+                                'creation_time: client_data.creation_time, '
                                 'notification_sent: client_data.notification_sent, '
                                 'is_blocked: client_data.is_blocked })'
             'RETURN c1'
@@ -100,7 +100,7 @@ class Neo4jDatabaseAccess:
             'CREATE (c1:Connection { status: connection_data.status, '
                                 'port: connection_data.port, '
                                 'name: connection_data.name, '
-                                'current_time: connection_data.current_time}) '
+                                'last_update_time: connection_data.last_update_tim}) '
             'RETURN c1'
         )
         result = transax.run(query)
@@ -342,6 +342,51 @@ class Neo4jDatabaseAccess:
             logging.error('%s raised an error: \n %s', query, exception)
             raise
 
+    @beartype
+    def check_if_client_is_blocked(self, ip_address: str):
+        """Checks if a client is blocked for new incoming connection or not.
+        Args:
+            ip_address (str): ip address of client to verify
+
+        Returns:
+            bool: Ture if client is currently blocked
+        """        
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self. _check_if_client_is_blocked, ip_address)
+        return result
+
+    def _check_if_client_is_blocked(self, transax, ip_address: str):
+        """Executes querz to check the block status of a client.
+
+        Args:
+            transax (driver.session): seesion object to execute the query.
+            ip_address (str): the ip address of the client to be verified
+
+        Returns:
+            bool: Ture if client is currently blocked
+        """        
+        query = (
+                        'MATCH (cl:Client) '
+                        'WHERE cl.ip_address = "' + ip_address + '"'
+                        'RETURN cl'
+                        )
+
+        result = transax.run(query)
+        
+        try:
+            is_blocked = False
+            for record in result:
+                is_blocked=record['cl']['is_blocked']
+
+            if is_blocked == "True":
+                return True
+            else:
+                return False
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
 
     @beartype
     def update_connection_status(self, connection_name: str, status: str):
@@ -385,7 +430,7 @@ class Neo4jDatabaseAccess:
             raise
 
     @beartype
-    def update_and_return_client_block(self, ip_address: str, is_blocked: bool):
+    def update_and_return_client_block(self, ip_address: str, is_blocked: str):
         """ Updates the block status of a client. Will be set to True if a clients
             creates to many active connections.
 
@@ -401,7 +446,17 @@ class Neo4jDatabaseAccess:
 
     @staticmethod
     @beartype
-    def _update_and_return_client_block(transax, ip_address: str, is_blocked: bool):
+    def _update_and_return_client_block(transax, ip_address: str, is_blocked: str):
+        """Execute the query to update the client block status. 
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            ip_address (str): the clients ip address to be updated
+            is_blocked (str): the status to be set (Ture or False)
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        """
         query = (
                 'MATCH (c:Client {ip_address: "' + ip_address + '"}) '
                 'SET c.is_blocked = "' + is_blocked + '" '
@@ -417,7 +472,7 @@ class Neo4jDatabaseAccess:
             raise
 
     @beartype
-    def update_and_return_client_notification_sent(self, ip_address: str, sent: bool):
+    def update_and_return_client_notification_sent(self, ip_address: str, sent: str):
         """ Updates the notification status of a client. Once it was blocked an email
         is sent to the admin to notify the attack.
 
@@ -429,11 +484,21 @@ class Neo4jDatabaseAccess:
             result = session.write_transaction(
                 self._update_and_return_client_notification_sent, ip_address, sent)
         for record in result:
-            print(f'Updated block status of client: {record}')
+            print(f'Updated notification sent of client: {record}')
 
     @staticmethod
     @beartype
-    def _update_and_return_client_notification_sent(transax, ip_address: str, sent: bool):
+    def _update_and_return_client_notification_sent(transax, ip_address: str, sent: str):
+        """Execute the query to update the notification status of the client.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            ip_address (str): the ip address of the client to be updated
+            sent (str): status to be set (Ture or False)
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        """     
         query = (
                 'MATCH (c:Client {ip_address: "' + ip_address + '"}) '
                 'SET c.notification_sent = "' + sent + '" '
@@ -471,7 +536,7 @@ class Neo4jDatabaseAccess:
         """
         query = (
                 'MATCH (c:Connection {name: "' + connection_name + '"}) '
-                'SET c.current_time = "' + time + '" '
+                'SET c.last_update_time = "' + time + '" '
                 'RETURN c'
                 )
         result = transax.run(query)
@@ -578,8 +643,8 @@ class Neo4jDatabaseAccess:
 
 
 if __name__ == '__main__':
-    CLIENT_DATA_TEST = '{"ip_address": "127.0.0.1", "current_time": "1635015162"}'
-    CONNECTION_DATA_TEST = '''{"status": "active", "current_time": "1635015162",
+    CLIENT_DATA_TEST = '{"ip_address": "127.0.0.1", "creation_time": "1635015162"}'
+    CONNECTION_DATA_TEST = '''{"status": "active", "last_update_time": "1635015162",
                                "port": "1883", "name": "mqtt-explorer-0a61e6f1"}'''
     BROKER_DATA_TEST = '{"listener_port": "1883", "version": "1.6.9", "ip_address": "127.0.0.1"}'
     STARTS_CONNECTION_DATA_TEST = '''{"edge_name": "STARTS_CONNECTION",
@@ -598,7 +663,7 @@ if __name__ == '__main__':
                                                 "property_names": ["ip_address", "listener_port", "version"],
                                                 "property_values": ["127.0.0.1", "1883", "1.6.9"]}
                                     }'''
-    NEO4J_URI = 'bolt://localhost:7687'
+    NEO4J_URI = 'bolt://localhost:30687'
     NEO4J_USER = 'neo4j'
     NEO4J_PASS = 'gh1KLaqw'
 

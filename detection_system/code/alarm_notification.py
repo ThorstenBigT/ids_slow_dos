@@ -13,7 +13,7 @@ from beartype import beartype
 
 
 EMAIL = 'ids_masterarbeit@gmx.at'
-EMAIL_PASS ='Uq62/x~!4,5*cjK,'
+EMAIL_PASS ='cYqBUB5L'
 EMAIL_SUBJECT = 'INTRUSION DETECTED!!!!'
 
 class AlarmNotification:
@@ -36,7 +36,7 @@ class AlarmNotification:
 
     @beartype
     def send_email(self, message: str):
-        """Is Sending an Email with the provided message string. 
+        """Is Sending an Email with the provided message string.
 
         Args:
             message (str): [description]

@@ -86,6 +86,7 @@ class LocalFileAccess:
                                 break
                         except FileNotFoundError:
                             pass
+                        # Maybe it will be faster without sleep 
                         time.sleep(1)
                     yield line
 
