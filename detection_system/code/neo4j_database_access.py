@@ -31,40 +31,40 @@ class Neo4jDatabaseAccess:
         self.driver.close()
 
     @beartype
-    def create_client(self, client_json: str):
-        '''Creates a client node in the database.
+    def create_host(self, host_json: str):
+        '''Creates a host node in the database.
 
         Args:
-            client_json (str): data of the client in json format
+            host_json (str): data of the host in json format
         '''
         with self.driver.session() as session:
             result = session.write_transaction(
-                self._create_and_return_client, client_json)
+                self._create_and_return_host, host_json)
             for record in result:
-                print(f'Created client node: {record["c1"]}')
+                print(f'Created host node: {record["h1"]}')
 
     @staticmethod
-    def _create_and_return_client(transax, client_json: str):
+    def _create_and_return_host(transax, host_json: str):
         '''Executes a create statement and loads in json data.
 
         Args:
             transax (driver.session): seesion object to execute the query
-            client_json (str): data of the client in json format
+            host_json (str): data of the host in json format
 
         Returns:
             Iteratable: A list of dictonaries with the data from the query.
         '''
         query = (
-            'WITH apoc.convert.fromJsonMap(\"'+ client_json +'\") as client_data '
-            'CREATE (c1:Client { ip_address: client_data.ip_address, '
-                                'creation_time: client_data.creation_time, '
-                                'notification_sent: client_data.notification_sent, '
-                                'is_blocked: client_data.is_blocked })'
-            'RETURN c1'
+            'WITH apoc.convert.fromJsonMap(\"'+ host_json +'\") as host_data '
+            'CREATE (h1:Host { ip_address: host_data.ip_address, '
+                                'creation_time: host_data.creation_time, '
+                                'notification_sent: host_data.notification_sent, '
+                                'is_blocked: host_data.is_blocked })'
+            'RETURN h1'
         )
         result = transax.run(query)
         try:
-            return [{'c1': record['c1']['ip_address']}
+            return [{'h1': record['h1']['ip_address']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
@@ -90,7 +90,7 @@ class Neo4jDatabaseAccess:
 
         Args:
             transax (driver.session): seesion object to execute the query
-            client_json (str): data of the connection in json format
+            connection_json (str): data of the connection in json format
 
         Returns:
             Iteratable: A list of dictonaries with the data from the query.
@@ -113,39 +113,40 @@ class Neo4jDatabaseAccess:
             raise
 
     @beartype
-    def create_broker(self, broker_json: str):
-        '''Creates a broker node in the database.
+    def create_service(self, service_json: str):
+        '''Creates a service node in the database.
 
         Args:
-            connection_json (str): data of the broker in json format.
+            connection_json (str): data of the service in json format.
         '''
         with self.driver.session() as session:
             result = session.write_transaction(
-                self._create_and_return_broker, broker_json)
+                self._create_and_return_service, service_json)
             for record in result:
-                print(f'Created broker node: {record["b"]}')
+                print(f'Created service node: {record["s"]}')
 
     @staticmethod
-    def _create_and_return_broker(transax, broker_json: str):
+    def _create_and_return_service(transax, service_json: str):
         '''Executes a create statement and loads in json data.
 
         Args:
             transax (driver.session): seesion object to execute the query
-            client_json (str): data of the broker in json format
+            service_json (str): data of the service in json format
 
         Returns:
             Iteratable: A list of dictonaries with the data from the query.
         '''
         query = (
-            'WITH apoc.convert.fromJsonMap(\"'+ broker_json +'\") as broker_data '
-            'CREATE (b:Broker { listener_port: broker_data.listener_port, '
-                                'ip_address: broker_data.ip_address,'
-                                'version: broker_data.version }) '
-            'RETURN b'
+            'WITH apoc.convert.fromJsonMap(\"'+ service_json +'\") as service_data '
+            'CREATE (s:service { name: service_data.name, '
+                                'port: service_data.port,'
+                                'protocol: service_data.protocol,'
+                                'version: service_data.version }) '
+            'RETURN s'
         )
         result = transax.run(query)
         try:
-            return [{'b': record['b']['ip_address']}
+            return [{'s': record['s']['ip_address']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
@@ -170,7 +171,7 @@ class Neo4jDatabaseAccess:
 
         Args:
             transax (driver.session): seesion object to execute the query
-            client_json (str): data of the edge in json format
+            connection_json (str): data of the edge in json format
 
         Returns:
             Iteratable: A list of dictonaries with the data from the query.
@@ -343,33 +344,33 @@ class Neo4jDatabaseAccess:
             raise
 
     @beartype
-    def check_if_client_is_blocked(self, ip_address: str):
-        """Checks if a client is blocked for new incoming connection or not.
+    def check_if_host_is_blocked(self, ip_address: str):
+        """Checks if a host is blocked for new incoming connection or not.
         Args:
-            ip_address (str): ip address of client to verify
+            ip_address (str): ip address of host to verify
 
         Returns:
-            bool: Ture if client is currently blocked
+            bool: Ture if host is currently blocked
         """        
         with self.driver.session() as session:
             result = session.write_transaction(
-                self. _check_if_client_is_blocked, ip_address)
+                self. _check_if_host_is_blocked, ip_address)
         return result
 
-    def _check_if_client_is_blocked(self, transax, ip_address: str):
-        """Executes querz to check the block status of a client.
+    def _check_if_host_is_blocked(self, transax, ip_address: str):
+        """Executes querz to check the block status of a host.
 
         Args:
             transax (driver.session): seesion object to execute the query.
-            ip_address (str): the ip address of the client to be verified
+            ip_address (str): the ip address of the host to be verified
 
         Returns:
-            bool: Ture if client is currently blocked
+            bool: Ture if host is currently blocked
         """        
         query = (
-                        'MATCH (cl:Client) '
-                        'WHERE cl.ip_address = "' + ip_address + '"'
-                        'RETURN cl'
+                        'MATCH (h:Host) '
+                        'WHERE h.ip_address = "' + ip_address + '"'
+                        'RETURN h1'
                         )
 
         result = transax.run(query)
@@ -377,7 +378,7 @@ class Neo4jDatabaseAccess:
         try:
             is_blocked = False
             for record in result:
-                is_blocked=record['cl']['is_blocked']
+                is_blocked=record['h1']['is_blocked']
 
             if is_blocked == "True":
                 return True
@@ -430,41 +431,41 @@ class Neo4jDatabaseAccess:
             raise
 
     @beartype
-    def update_and_return_client_block(self, ip_address: str, is_blocked: str):
-        """ Updates the block status of a client. Will be set to True if a clients
+    def update_and_return_host_block(self, ip_address: str, is_blocked: str):
+        """ Updates the block status of a host. Will be set to True if a hosts
             creates to many active connections.
 
         Args:
-            ip_address (str): ip_address of the client to be blocked
+            ip_address (str): ip_address of the host to be blocked
             is_blocked (bool): state of the block status (True/False)
         """
         with self.driver.session() as session:
             result = session.write_transaction(
-                self._update_and_return_client_block, ip_address, is_blocked)
+                self._update_and_return_host_block, ip_address, is_blocked)
         for record in result:
-            print(f'Updated block status of client: {record}')
+            print(f'Updated block status of host: {record}')
 
     @staticmethod
     @beartype
-    def _update_and_return_client_block(transax, ip_address: str, is_blocked: str):
-        """Execute the query to update the client block status. 
+    def _update_and_return_host_block(transax, ip_address: str, is_blocked: str):
+        """Execute the query to update the host block status.
 
         Args:
             transax (driver.session): seesion object to execute the query
-            ip_address (str): the clients ip address to be updated
+            ip_address (str): the hosts ip address to be updated
             is_blocked (str): the status to be set (Ture or False)
 
         Returns:
             Iteratable: A list of dictonaries with the data from the query.
         """
         query = (
-                'MATCH (c:Client {ip_address: "' + ip_address + '"}) '
-                'SET c.is_blocked = "' + is_blocked + '" '
-                'RETURN c'
+                'MATCH (h:Host {ip_address: "' + ip_address + '"}) '
+                'SET h.is_blocked = "' + is_blocked + '" '
+                'RETURN h'
                 )
         result = transax.run(query)
         try:
-            return [{'c': record['c']['ip_address']}
+            return [{'h': record['h']['ip_address']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
@@ -472,41 +473,41 @@ class Neo4jDatabaseAccess:
             raise
 
     @beartype
-    def update_and_return_client_notification_sent(self, ip_address: str, sent: str):
-        """ Updates the notification status of a client. Once it was blocked an email
+    def update_and_return_host_notification_sent(self, ip_address: str, sent: str):
+        """ Updates the notification status of a host. Once it was blocked an email
         is sent to the admin to notify the attack.
 
         Args:
-            ip_address (str): ip_address of the client to be blocked
+            ip_address (str): ip_address of the host to be blocked
             sent (bool): state of the notification status (True/False)
         """
         with self.driver.session() as session:
             result = session.write_transaction(
-                self._update_and_return_client_notification_sent, ip_address, sent)
+                self._update_and_return_host_notification_sent, ip_address, sent)
         for record in result:
-            print(f'Updated notification sent of client: {record}')
+            print(f'Updated notification sent of host: {record}')
 
     @staticmethod
     @beartype
-    def _update_and_return_client_notification_sent(transax, ip_address: str, sent: str):
-        """Execute the query to update the notification status of the client.
+    def _update_and_return_host_notification_sent(transax, ip_address: str, sent: str):
+        """Execute the query to update the notification status of the host.
 
         Args:
             transax (driver.session): seesion object to execute the query
-            ip_address (str): the ip address of the client to be updated
+            ip_address (str): the ip address of the host to be updated
             sent (str): status to be set (Ture or False)
 
         Returns:
             Iteratable: A list of dictonaries with the data from the query.
         """     
         query = (
-                'MATCH (c:Client {ip_address: "' + ip_address + '"}) '
-                'SET c.notification_sent = "' + sent + '" '
-                'RETURN c'
+                'MATCH (h:host {ip_address: "' + ip_address + '"}) '
+                'SET h.notification_sent = "' + sent + '" '
+                'RETURN h'
                 )
         result = transax.run(query)
         try:
-            return [{'c': record['c']['ip_address']}
+            return [{'h': record['h']['ip_address']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
@@ -643,12 +644,12 @@ class Neo4jDatabaseAccess:
 
 
 if __name__ == '__main__':
-    CLIENT_DATA_TEST = '{"ip_address": "127.0.0.1", "creation_time": "1635015162"}'
+    HOST_DATA_TEST = '{"ip_address": "127.0.0.1", "creation_time": "1635015162"}'
     CONNECTION_DATA_TEST = '''{"status": "active", "last_update_time": "1635015162",
-                               "port": "1883", "name": "mqtt-explorer-0a61e6f1"}'''
-    BROKER_DATA_TEST = '{"listener_port": "1883", "version": "1.6.9", "ip_address": "127.0.0.1"}'
+                               "port": 1883, "name": "mqtt-explorer-0a61e6f1"}'''
+    SERVICE_DATA_TEST = '{"port": 1883, "version": "1.6.9", "name": "mosquitto"}'
     STARTS_CONNECTION_DATA_TEST = '''{"edge_name": "STARTS_CONNECTION",
-                                        "node1": {  "name":"Client",
+                                        "node1": {  "name":"Host",
                                                     "property_names": ["ip_address"],
                                                     "property_values": ["127.0.0.1"]},
                                         "node2": {  "name":"Connection",
@@ -659,9 +660,9 @@ if __name__ == '__main__':
                                     "node1": {  "name":"Connection",
                                                 "property_names": ["name"],
                                                 "property_values": ["mqtt-explorer-0a61e6f1"]},
-                                    "node2": {  "name":"Broker",
-                                                "property_names": ["ip_address", "listener_port", "version"],
-                                                "property_values": ["127.0.0.1", "1883", "1.6.9"]}
+                                    "node2": {  "name":"Service",
+                                                "property_names": ["name", "port", "version"],
+                                                "property_values": ["mosquitto", "1883", "1.6.9"]}
                                     }'''
     NEO4J_URI = 'bolt://localhost:30687'
     NEO4J_USER = 'neo4j'
@@ -669,20 +670,20 @@ if __name__ == '__main__':
 
     neo4j_driver = Neo4jDatabaseAccess(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
 
-    if not neo4j_driver.check_if_node_exists('Client', 'ip_address', '127.0.0.1'):
-        neo4j_driver.create_client(CLIENT_DATA_TEST)
-    if not neo4j_driver.check_if_constraint_exists('Client', ['ip_address']):
-        neo4j_driver.create_unique_property_constraint('Client', ['ip_address'])
+    if not neo4j_driver.check_if_node_exists('Host', 'ip_address', '127.0.0.1'):
+        neo4j_driver.create_host(HOST_DATA_TEST)
+    if not neo4j_driver.check_if_constraint_exists('Host', ['ip_address']):
+        neo4j_driver.create_unique_property_constraint('Host', ['ip_address'])
 
     if not neo4j_driver.check_if_node_exists('Connection', 'name', 'mqtt-explorer-0a61e6f1'):
         neo4j_driver.create_connection(CONNECTION_DATA_TEST)
     if not neo4j_driver.check_if_constraint_exists('Connection', ['name']):
         neo4j_driver.create_unique_property_constraint('Connection', ['name'])
 
-    if not neo4j_driver.check_if_node_exists('Broker', 'ip_address', '127.0.0.1'):
-        neo4j_driver.create_broker(BROKER_DATA_TEST)
-    if not neo4j_driver.check_if_constraint_exists('Broker', ['ip_address', 'version', 'listener_port']):
-        neo4j_driver.create_unique_property_constraint('Broker', ['ip_address', 'version', 'listener_port'])
+    if not neo4j_driver.check_if_node_exists('Service', 'name', 'mosquitto'):
+        neo4j_driver.create_service(SERVICE_DATA_TEST)
+    if not neo4j_driver.check_if_constraint_exists('Service', ['name', 'version', 'port']):
+        neo4j_driver.create_unique_property_constraint('Service', ['name', 'version', 'port'])
 
     neo4j_driver.create_edge(STARTS_CONNECTION_DATA_TEST)
     neo4j_driver.create_edge(CONNECTS_TO_DATA_TEST)
@@ -690,8 +691,8 @@ if __name__ == '__main__':
     neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', '1635015166')
 
     count_query = (
-            'MATCH (c:Client)-[r:STARTS_CONNECTION]->() '
-            'RETURN c, count(r) as count'
+            'MATCH (h:Host)-[r:STARTS_CONNECTION]->() '
+            'RETURN h, count(r) as count'
              )
     count_result = neo4j_driver.execute_and_return_query_result(count_query)
 

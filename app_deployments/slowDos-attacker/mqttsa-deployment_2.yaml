@@ -4,7 +4,7 @@ metadata:
   name: mqttsa2
   labels:
     app: mqttsa2
-  namespace: slowDos-attacker
+  namespace: slowdos-attacker
 spec:
   selector:
     matchLabels:

@@ -12,26 +12,40 @@ from local_file_access import LocalFileAccess
 
 class FormatLog:
     """This class contains a collection of regular expression functions to extract data
-    from the log file and stores it as dataframe. Set broker ip address default to 127.0.0.01
-    since it can't be read from the log.
+    from the log file and stores it as dataframe.
     """
 
     def __init__(self):
         """Interface to extract information from the log file. I need to use string as booleans
         since json expext them to be wirtten small an neo4j can handel the conversion.
         """
-        self.client_data = {"ip_address": None,
-                            "creation_time": None,
-                            "is_blocked": "False",
-                            "notification_sent": "False"
-                            }
+        self.host_data = {"ip_address": None,
+                        "creation_time": None,
+                        "is_blocked": "False",
+                        "notification_sent": "False"
+                        }
         self.connection_data ={"status": "active",
                                 "last_update_time": None,
                                 "name": None
                                 }
-        self.broker_data = {"listener_port": None,
+        self.service_data = {"name": None,
+                            "port": None,
                             "version": None,
-                            "ip_address": "127.0.0.1"
+                            "protocol":None,
+                            }
+        self.vulnerability_data = {"name": None,
+                                    "cve_code": None,
+                                    "effected_protocol": None,
+                                    "effected_version":None,
+                                    "description": None
+                                    }
+        self.precondition_data = {"name": None,
+                                    "type": None,
+                                    "description": None
+                                    }
+        self.attack_data = {"name": None,
+                            "type": None,
+                            "goal": None
                             }
 
     @beartype
@@ -44,7 +58,7 @@ class FormatLog:
         matches = re.findall(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b", log_string)
         if matches:
             if len(matches) == 1:
-                self.client_data["ip_address"] = matches[0]
+                self.host_data["ip_address"] = matches[0]
             else:
                 logging.error("Functions: extract_ip_address_by_row else clause not yet implemeneted")
         else:
@@ -66,7 +80,7 @@ class FormatLog:
         matches = re.findall(r"\b([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$\b", log_string)
         if matches:
             if len(matches) == 1:
-                self.broker_data["listener_port"] = matches[0]
+                self.service_data["port"] = matches[0]
             else:
                 logging.error("Functions: extract_port_number_by_row else clause not yet implemeneted")
         else:
@@ -83,7 +97,7 @@ class FormatLog:
         """
         groups = log_string.split(":")
         if groups:
-            self.client_data["creation_time"] = groups[0]
+            self.host_data["creation_time"] = groups[0]
             self.connection_data["last_update_time"] = groups[0]
 
         else:
@@ -107,7 +121,7 @@ class FormatLog:
 
     @beartype
     def extract_version_by_row(self, log_string: str):
-        """Extract with a regular exprsession the version of the broker.
+        """Extract with a regular exprsession the version of the service.
 
         Args:
             log_string (str): one row of the log file
@@ -115,12 +129,81 @@ class FormatLog:
         matches = re.findall(r"version \b([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})\b", log_string)
         if matches:
             if len(matches) == 1:
-                self.broker_data["version"] = matches[0]
+                self.service_data["version"] = matches[0]
             else:
                 logging.error("Functions: extract_connection_name_by_row else clause not yet implemeneted")
         else:
             logging.info("extract_version_by_row no match was found in: %s", log_string)
 
+    @beartype
+    def set_service_port(self, port: int):
+        """Set port of service
+
+        Args:
+            status (str): ip_address of the service
+        """
+        self.service_data["port"] = port
+    
+    @beartype
+    def set_service_port(self, protocol: str):
+        """Set communication protocol of service
+
+        Args:
+            protocpl (str): protocol of the service
+        """
+        self.service_data["protocol"] = protocol
+
+    @beartype
+    def set_service_version(self, version: str):
+        """Set version of service
+
+        Args:
+            protocol (str): protocol of the service
+        """
+        self.service_data["version"] = version
+
+    @beartype
+    def set_service_version(self, name: str):
+        """Set name of service
+
+        Args:
+            name (str): name of the service
+        """
+        self.service_data["name"] = name
+
+    def reset_service_data(self):
+        """Set values of host_data json to None
+        """
+        self.service_data = dict.fromkeys(self.service_data, None)
+
+    def reset_host_data(self):
+        """Set values of host_data json to None
+        """
+        self.connection_data = dict.fromkeys(self.connection_data, None)
+
+    @beartype
+    def set_host_is_blocked(self, is_blocked: str):
+        """Set values of is_blocked in host json to false or ture.
+        Is a string since neo4j can't convert python bool to json bool.
+
+        Args:
+            is_blocked (str): True or False
+        """
+        self.host_data["is_blocked"] = is_blocked
+    
+    @beartype
+    def set_host_notification_sent(self, sent: str):
+        """Set values of is_blocked in host json to false or ture.
+        Is a string since neo4j can't convert python bool to json bool.
+        Args:
+            sent (str): True or False
+        """
+        self.host_data["notification_sent"] = sent
+
+    def reset_connection_data(self):
+        """Set values of vulberability_data json to None
+        """
+        self.connection_data = dict.fromkeys(self.connection_data, None)
 
     @beartype
     def set_connection_status(self, status: str):
@@ -130,42 +213,109 @@ class FormatLog:
             status (str): status code of connection (inactive/active)
         """
         self.connection_data["status"] = status
-
-    @beartype
-    def set_broker_ip_address(self, ip_address: str):
-        """Set ip_address of broker
-
-        Args:
-            status (str): ip_address as string of the broker
-        """
-        self.broker_data["ip_address"] = ip_address
-
-    def reset_client_data(self):
-        """Set values of client_data json to None
-        """
-        self.connection_data = dict.fromkeys(self.connection_data, None)
-
-    @beartype
-    def set_client_is_blocked(self, is_blocked: str):
-        """Set values of is_blocked in client json to false or ture.
-        """
-        self.client_data["is_blocked"] = is_blocked
-    
-    @beartype
-    def set_client_notification_sent(self, sent: str):
-        """Set values of is_blocked in client json to false or ture.
-        """
-        self.client_data["notification_sent"] = sent
-
-    def reset_connection_data(self):
+        
+    def reset_vulnerability_data(self):
         """Set values of connection_data json to None
         """
-        self.connection_data = dict.fromkeys(self.connection_data, None)
+        self.vulnerability_data = dict.fromkeys(self.vulnerability_data, None)
 
-    def reset_broker_data(self):
-        """Set values of client_data json to None
+    @beartype
+    def set_vulnerability_name(self, name: str):
+        """Set name of vulnerablitly.
+        Args:
+            name (str): name of the vulnerability
         """
-        self.broker_data = dict.fromkeys(self.broker_data, None)
+        self.vulnerability_data["name"] = name
+
+    @beartype
+    def set_vulnerability_cve_code(self, cve_code: str):
+        """Set name of vulnerablitly.
+        Args:
+            name (str): name of the vulnerability
+        """
+        self.vulnerability_data["name"] = cve_code
+
+    @beartype
+    def set_vulnerability_effected_protocol(self, effected_protocol: str):
+        """Set effected protocol name of vulnerablitly.
+        Args:
+            effected_protocol (str): name of the effected protocol
+        """
+        self.vulnerability_data["effected_protocol"] = effected_protocol
+
+    @beartype
+    def set_vulnerability_effected_version(self, effected_version: str):
+        """Set effected protocol version of vulnerablitly.
+        Args:
+            effected_version (str): version of the effected protocol
+        """
+        self.vulnerability_data["effected_version"] = effected_version
+
+    @beartype
+    def set_vulnerability_description(self, description: str):
+        """Set vulnerablitly description.
+        Args:
+            description (str): description of the vulnerability
+        """
+        self.vulnerability_data["description"] = description
+
+    def reset_precondition_data(self):
+        """Set values of precondition_data json to None
+        """
+        self.precondition_data = dict.fromkeys(self.precondition_data, None)
+
+    @beartype
+    def set_precondition_name(self, name: str):
+        """Set precondition name needed for an attack.
+        Args:
+            description (str): name of the precondition
+        """
+        self.precondition_data["name"] = name
+
+    @beartype
+    def set_precondition_type(self, cond_type: str):
+        """Set precondition type needed for an attack.
+        Args:
+            cond_type (str): type of the precondition (Network Access/User Credentials)
+        """
+        self.precondition_data["type"] = cond_type
+
+    @beartype
+    def set_precondition_description(self, description: str):
+        """Set precondition description needed for an attack.
+        Args:
+            description (str): description of the precondition
+        """
+        self.precondition_data["description"] = description
+
+    def reset_attack_data(self):
+        """Set values of precondition_data json to None
+        """
+        self.precondition_data = dict.fromkeys(self.precondition_data, None)
+    
+    @beartype
+    def set_attack_name(self, name: str):
+        """Set attack name.
+        Args:
+            name (str): name of the attack
+        """
+        self.attack_data["name"] = name
+
+    @beartype
+    def set_attack_type(self, attack_type: str):
+        """Set attack type.
+        Args:
+            attack_type (str): name of the attack type (DoS)
+        """
+        self.attack_data["type"] = attack_type
+
+    @beartype
+    def set_attack_goal(self, goal: str):
+        """Set attack goal.
+        Args:
+            goal (str): name of the attack goal
+        """
+        self.attack_data["goal"] = goal
 
 if __name__ == "__main__":
     LOCAL_PATH = "C:/Users/Thorsten/Documents/Masterarbeit/Security/ids_slow_dos/detection_system/code"
@@ -179,8 +329,8 @@ if __name__ == "__main__":
     log_formatter.extract_connection_name_by_row(local_file.get_line(5))
     log_formatter.extract_port_number_by_row(local_file.get_line(2))
     log_formatter.extract_version_by_row(local_file.get_line(0))
-    print(log_formatter.client_data)
+    print(log_formatter.host_data)
     print(log_formatter.connection_data)
-    print(log_formatter.broker_data)
+    print(log_formatter.service_data)
     local_file.close()
  
