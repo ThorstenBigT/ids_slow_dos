@@ -55,7 +55,7 @@ class Neo4jDatabaseAccess:
             Iteratable: A list of dictonaries with the data from the query.
         '''
         query = (
-            'WITH apoc.convert.fromJsonMap(\"'+ host_json +'\") as host_data '
+            'WITH apoc.convert.fromJsonMap(\''+ host_json +'\') as host_data '
             'CREATE (h1:Host { ip_address: host_data.ip_address, '
                                 'creation_time: host_data.creation_time, '
                                 'notification_sent: host_data.notification_sent, '
@@ -96,7 +96,7 @@ class Neo4jDatabaseAccess:
             Iteratable: A list of dictonaries with the data from the query.
         '''
         query = (
-            'WITH apoc.convert.fromJsonMap(\"'+ connection_json +'\") as connection_data '
+            'WITH apoc.convert.fromJsonMap(\''+ connection_json +'\') as connection_data '
             'CREATE (c1:Connection { status: connection_data.status, '
                                 'port: connection_data.port, '
                                 'name: connection_data.name, '
@@ -117,7 +117,7 @@ class Neo4jDatabaseAccess:
         '''Creates a service node in the database.
 
         Args:
-            connection_json (str): data of the service in json format.
+            service_json (str): data of the service in json format.
         '''
         with self.driver.session() as session:
             result = session.write_transaction(
@@ -137,8 +137,8 @@ class Neo4jDatabaseAccess:
             Iteratable: A list of dictonaries with the data from the query.
         '''
         query = (
-            'WITH apoc.convert.fromJsonMap(\"'+ service_json +'\") as service_data '
-            'CREATE (s:service { name: service_data.name, '
+            'WITH apoc.convert.fromJsonMap(\''+ service_json +'\') as service_data '
+            'CREATE (s:Service { name: service_data.name, '
                                 'port: service_data.port,'
                                 'protocol: service_data.protocol,'
                                 'version: service_data.version }) '
@@ -146,12 +146,97 @@ class Neo4jDatabaseAccess:
         )
         result = transax.run(query)
         try:
-            return [{'s': record['s']['ip_address']}
+            return [{'s': record['s']['name']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
             logging.error('%s raised an error: \n %s', query, exception)
             raise
+
+    @beartype
+    def create_vulnerability(self, vulnerability_json: str):
+        '''Creates a vulnerability node in the database.
+
+        Args:
+            vulnerability_json (str): data of the vulnerability in json format.
+        '''
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._create_and_return_vulnerability, vulnerability_json)
+            for record in result:
+                print(f'Created vulnerability node: {record["v"]}')
+
+    @staticmethod
+    def _create_and_return_vulnerability(transax, vulnerability_json: str):
+        '''Executes a create statement and loads in json data.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            vulnerability_json (str): data of the vulnerability in json format
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        '''
+        query = (
+            'WITH apoc.convert.fromJsonMap(\''+ vulnerability_json +'\') as vulnerability_data '
+            'CREATE (v:Vulnerability { name: vulnerability_data.name, '
+                                'cve_code: vulnerability_data.cve_code,'
+                                'effected_protocol: vulnerability_data.effected_protocol,'
+                                'description: vulnerability_data.description,'
+                                'effected_version: vulnerability_data.effected_protocol_version}) '
+            'RETURN v'
+        )
+        print(query)
+        result = transax.run(query)
+        try:
+            return [{'v': record['v']['name']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def create_attack(self, attack_json: str):
+        '''Creates a attack node in the database.
+
+        Args:
+            attack_json (str): data of the attack in json format.
+        '''
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._create_and_return_attack, attack_json)
+            for record in result:
+                print(f'Created attack node: {record["a"]}')
+
+    @staticmethod
+    def _create_and_return_attack(transax, attack_json: str):
+        '''Executes a create statement and loads in json data.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            attack_json (str): data of the attack in json format
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        '''
+        query = (
+            'WITH apoc.convert.fromJsonMap(\''+ attack_json +'\') as attack_data '
+            'CREATE (a:Attack { name: attack_data.name, '
+                                'type: attack_data.type,'
+                                'goal: attack_data.goal}) '
+            'RETURN a'
+        )
+        print(query)
+        result = transax.run(query)
+        try:
+            return [{'a': record['a']['name']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
 
     @beartype
     def create_edge(self,  edge_data: str):
@@ -351,7 +436,7 @@ class Neo4jDatabaseAccess:
 
         Returns:
             bool: Ture if host is currently blocked
-        """        
+        """
         with self.driver.session() as session:
             result = session.write_transaction(
                 self. _check_if_host_is_blocked, ip_address)
@@ -366,7 +451,7 @@ class Neo4jDatabaseAccess:
 
         Returns:
             bool: Ture if host is currently blocked
-        """        
+        """
         query = (
                         'MATCH (h:Host) '
                         'WHERE h.ip_address = "' + ip_address + '"'
@@ -374,7 +459,7 @@ class Neo4jDatabaseAccess:
                         )
 
         result = transax.run(query)
-        
+
         try:
             is_blocked = False
             for record in result:
@@ -499,7 +584,7 @@ class Neo4jDatabaseAccess:
 
         Returns:
             Iteratable: A list of dictonaries with the data from the query.
-        """     
+        """
         query = (
                 'MATCH (h:host {ip_address: "' + ip_address + '"}) '
                 'SET h.notification_sent = "' + sent + '" '
@@ -516,6 +601,13 @@ class Neo4jDatabaseAccess:
 
     @beartype
     def update_connnection_time(self, connection_name: str, time: str):
+        """Updates the connection node with the latest timestamp when it was
+        last updated.
+
+        Args:
+            connection_name (str): name of the connection
+            time (str): the timestamp to set
+        """
         with self.driver.session() as session:
             result = session.write_transaction(
                 self._update_and_return_connection_time, connection_name, time)
@@ -644,26 +736,48 @@ class Neo4jDatabaseAccess:
 
 
 if __name__ == '__main__':
-    HOST_DATA_TEST = '{"ip_address": "127.0.0.1", "creation_time": "1635015162"}'
-    CONNECTION_DATA_TEST = '''{"status": "active", "last_update_time": "1635015162",
-                               "port": 1883, "name": "mqtt-explorer-0a61e6f1"}'''
-    SERVICE_DATA_TEST = '{"port": 1883, "version": "1.6.9", "name": "mosquitto"}'
-    STARTS_CONNECTION_DATA_TEST = '''{"edge_name": "STARTS_CONNECTION",
-                                        "node1": {  "name":"Host",
-                                                    "property_names": ["ip_address"],
-                                                    "property_values": ["127.0.0.1"]},
-                                        "node2": {  "name":"Connection",
-                                                    "property_names": ["name"],
-                                                    "property_values": ["mqtt-explorer-0a61e6f1"]}
-                                        }'''
-    CONNECTS_TO_DATA_TEST = '''{"edge_name": "CONNECTS_TO",
-                                    "node1": {  "name":"Connection",
-                                                "property_names": ["name"],
-                                                "property_values": ["mqtt-explorer-0a61e6f1"]},
-                                    "node2": {  "name":"Service",
-                                                "property_names": ["name", "port", "version"],
-                                                "property_values": ["mosquitto", "1883", "1.6.9"]}
-                                    }'''
+    DUMMY_DATA_FOLDER_PATH = r'C:\Users\Thorsten\Documents\Masterarbeit\Security\ids_slow_dos\detection_system\code\dummy_data'
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_host_data.json', encoding='utf-8')
+    HOST_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_connection_data.json', encoding='utf-8')
+    CONNECTION_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_service_data.json', encoding='utf-8')
+    SERVICE_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_starts_connection_data.json', encoding='utf-8')
+    STARTS_CONNECTION_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_connects_to_data.json', encoding='utf-8')
+    CONNECTS_TO_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_at_host_data.json', encoding='utf-8')
+    AT_HOST_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_vulnerability_data.json', encoding='utf-8')
+    VULNERABILITY_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_has_vulnerability_data.json', encoding='utf-8')
+    HAS_VULNERABILITY_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_attack_data.json', encoding='utf-8')
+    ATTACK_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_exploits_data.json', encoding='utf-8')
+    EXPLOITS_DATA_TEST = json.loads(f.read())
+    f.close()
+
     NEO4J_URI = 'bolt://localhost:30687'
     NEO4J_USER = 'neo4j'
     NEO4J_PASS = 'gh1KLaqw'
@@ -671,30 +785,44 @@ if __name__ == '__main__':
     neo4j_driver = Neo4jDatabaseAccess(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
 
     if not neo4j_driver.check_if_node_exists('Host', 'ip_address', '127.0.0.1'):
-        neo4j_driver.create_host(HOST_DATA_TEST)
+        neo4j_driver.create_host(json.dumps(HOST_DATA_TEST))
     if not neo4j_driver.check_if_constraint_exists('Host', ['ip_address']):
         neo4j_driver.create_unique_property_constraint('Host', ['ip_address'])
 
     if not neo4j_driver.check_if_node_exists('Connection', 'name', 'mqtt-explorer-0a61e6f1'):
-        neo4j_driver.create_connection(CONNECTION_DATA_TEST)
+        neo4j_driver.create_connection(json.dumps(CONNECTION_DATA_TEST))
     if not neo4j_driver.check_if_constraint_exists('Connection', ['name']):
         neo4j_driver.create_unique_property_constraint('Connection', ['name'])
 
     if not neo4j_driver.check_if_node_exists('Service', 'name', 'mosquitto'):
-        neo4j_driver.create_service(SERVICE_DATA_TEST)
+        neo4j_driver.create_service(json.dumps(SERVICE_DATA_TEST))
     if not neo4j_driver.check_if_constraint_exists('Service', ['name', 'version', 'port']):
         neo4j_driver.create_unique_property_constraint('Service', ['name', 'version', 'port'])
 
-    neo4j_driver.create_edge(STARTS_CONNECTION_DATA_TEST)
-    neo4j_driver.create_edge(CONNECTS_TO_DATA_TEST)
-    neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', 'active')
-    neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', '1635015166')
+    if not neo4j_driver.check_if_node_exists('Vulnerability', 'cve_code', 'CVE-2020-13849'):
+        neo4j_driver.create_vulnerability(json.dumps(VULNERABILITY_DATA_TEST))
+    if not neo4j_driver.check_if_constraint_exists('Vulnerability', ['cve_code']):
+        neo4j_driver.create_unique_property_constraint('Vulnerability', ['cve_code'])
 
-    count_query = (
+    if not neo4j_driver.check_if_node_exists('Attack', 'name', 'DoS'):
+        neo4j_driver.create_attack(json.dumps(ATTACK_DATA_TEST))
+    if not neo4j_driver.check_if_constraint_exists('Attack', ['name', 'type']):
+        neo4j_driver.create_unique_property_constraint('Attack', ['name', 'type'])
+
+    neo4j_driver.create_edge(json.dumps(STARTS_CONNECTION_DATA_TEST))
+    neo4j_driver.create_edge(json.dumps(CONNECTS_TO_DATA_TEST))
+    neo4j_driver.create_edge(json.dumps(AT_HOST_DATA_TEST))
+    neo4j_driver.create_edge(json.dumps(HAS_VULNERABILITY_DATA_TEST))
+    neo4j_driver.create_edge(json.dumps(EXPLOITS_DATA_TEST))
+
+    neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', 'active')
+    neo4j_driver.update_connnection_time('mqtt-explorer-0a61e6f1', '1635015166')
+
+    COUNT_QUERY = (
             'MATCH (h:Host)-[r:STARTS_CONNECTION]->() '
             'RETURN h, count(r) as count'
              )
-    count_result = neo4j_driver.execute_and_return_query_result(count_query)
+    count_result = neo4j_driver.execute_and_return_query_result(COUNT_QUERY)
 
     if count_result is not None:
         for records in count_result:

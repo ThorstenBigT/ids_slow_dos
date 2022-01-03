@@ -1,0 +1,5 @@
+{
+    "name": "DoS",
+    "type": "SlowDoS",
+    "goal": "Loss of the ability to establish new connections" 
+}

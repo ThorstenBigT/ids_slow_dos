@@ -136,16 +136,16 @@ class FormatLog:
             logging.info("extract_version_by_row no match was found in: %s", log_string)
 
     @beartype
-    def set_service_port(self, port: int):
+    def set_service_port(self, port: str):
         """Set port of service
 
         Args:
-            status (str): ip_address of the service
+            port (str): port of the service
         """
         self.service_data["port"] = port
     
     @beartype
-    def set_service_port(self, protocol: str):
+    def set_service_protocol(self, protocol: str):
         """Set communication protocol of service
 
         Args:
@@ -163,7 +163,7 @@ class FormatLog:
         self.service_data["version"] = version
 
     @beartype
-    def set_service_version(self, name: str):
+    def set_service_name(self, name: str):
         """Set name of service
 
         Args:
@@ -318,8 +318,8 @@ class FormatLog:
         self.attack_data["goal"] = goal
 
 if __name__ == "__main__":
-    LOCAL_PATH = "C:/Users/Thorsten/Documents/Masterarbeit/Security/ids_slow_dos/detection_system/code"
-    FILE_NAME = "mosquitto.log"
+    LOCAL_PATH = "C:/Users/Thorsten/Documents/Masterarbeit/Security/ids_slow_dos/detection_system/mosquitto_log_data"
+    FILE_NAME = "mosquitto_test_1.log"
     local_file = LocalFileAccess(LOCAL_PATH, FILE_NAME)
     log_formatter = FormatLog()
     log_formatter.extract_ip_address_by_row(local_file.get_line(4))

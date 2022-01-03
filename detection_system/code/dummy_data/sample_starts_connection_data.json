@@ -1,0 +1,8 @@
+{"edge_name": "STARTS_CONNECTION",
+    "node1": {  "name":"Host",
+                "property_names": ["ip_address"],
+                "property_values": ["127.0.0.1"]},
+    "node2": {  "name":"Connection",
+                "property_names": ["name"],
+                "property_values": ["mqtt-explorer-0a61e6f1"]}
+    }

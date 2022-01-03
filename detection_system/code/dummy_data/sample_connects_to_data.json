@@ -1,0 +1,8 @@
+{"edge_name": "CONNECTS_TO",
+    "node1": {  "name":"Connection",
+                "property_names": ["name"],
+                "property_values": ["mqtt-explorer-0a61e6f1"]},
+    "node2": {  "name":"Service",
+                "property_names": ["name", "port", "version"],
+                "property_values": ["mosquitto", "1883", "1.6.9"]}
+    }

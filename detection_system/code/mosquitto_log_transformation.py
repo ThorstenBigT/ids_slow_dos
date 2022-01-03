@@ -8,8 +8,8 @@ from format_log import FormatLog
 from neo4j_database_access import Neo4jDatabaseAccess
 from alarm_notification import AlarmNotification
 
-LOCAL_PATH = "C:\kind_persistent_volume\pvc-de7a29b4-8af1-4480-911a-1cd1ae980e1c_monitoring-system_mosquitto-log-pvc"
-FILE_NAME = "mosquitto.log"
+LOCAL_PATH = r'C:\kind_persistent_volume\pvc-de7a29b4-8af1-4480-911a-1cd1ae980e1c_monitoring-system_mosquitto-log-pvc'
+FILE_NAME = 'mosquitto.log'
 NEO4J_URI = 'bolt://localhost:30687'
 NEO4J_USER = 'neo4j'
 NEO4J_PASS = 'gh1KLaqw'

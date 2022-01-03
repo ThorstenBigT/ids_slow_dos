@@ -1,0 +1,6 @@
+{
+    "port": "1883",
+    "version": "1.6.9",
+    "name": "mosquitto",
+    "protocol": "MQTT"
+}
