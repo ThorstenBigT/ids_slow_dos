@@ -1,0 +1,6 @@
+{
+    "name": "Network Access",
+    "type": "Reachability",
+    "capability_level": "High",
+    "description": "To perfrom the attack the adversary needs to have acces to the network" 
+}

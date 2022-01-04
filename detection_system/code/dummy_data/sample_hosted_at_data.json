@@ -1,5 +1,5 @@
 {
-    "edge_name": "AT_HOST",
+    "edge_name": "HOSTED_AT",
     "node1": {  "name":"Host",
                 "property_names": ["ip_address"],
                 "property_values": ["127.0.0.1"]},

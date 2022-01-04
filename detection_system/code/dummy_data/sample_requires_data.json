@@ -1,0 +1,9 @@
+{
+    "edge_name": "REQUIRES",
+    "node1": {  "name":"Attack",
+                "property_names": ["name", "type"],
+                "property_values": ["DoS", "SlowDoS"]},
+    "node2": {  "name":"Precondition",
+                "property_names": ["name", "type"],
+                "property_values": ["Network Access", "Reachability"]}
+}

@@ -100,7 +100,7 @@ class Neo4jDatabaseAccess:
             'CREATE (c1:Connection { status: connection_data.status, '
                                 'port: connection_data.port, '
                                 'name: connection_data.name, '
-                                'last_update_time: connection_data.last_update_tim}) '
+                                'last_update_time: connection_data.last_update_time}) '
             'RETURN c1'
         )
         result = transax.run(query)
@@ -183,10 +183,11 @@ class Neo4jDatabaseAccess:
                                 'cve_code: vulnerability_data.cve_code,'
                                 'effected_protocol: vulnerability_data.effected_protocol,'
                                 'description: vulnerability_data.description,'
-                                'effected_version: vulnerability_data.effected_protocol_version}) '
+                                'effected_app: vulnerability_data.effected_app,'
+                                'effected_app_version: vulnerability_data.effected_app_version,'
+                                'effected_version: vulnerability_data.effected_prot_version}) '
             'RETURN v'
         )
-        print(query)
         result = transax.run(query)
         try:
             return [{'v': record['v']['name']}
@@ -227,10 +228,50 @@ class Neo4jDatabaseAccess:
                                 'goal: attack_data.goal}) '
             'RETURN a'
         )
-        print(query)
         result = transax.run(query)
         try:
             return [{'a': record['a']['name']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def create_precondition(self, precondition_json: str):
+        '''Creates a precondition node in the database.
+
+        Args:
+            precondition_json (str): data of the precondition in json format.
+        '''
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._create_and_return_precondition, precondition_json)
+            for record in result:
+                print(f'Created precondition node: {record["p"]}')
+
+    @staticmethod
+    def _create_and_return_precondition(transax, precondition_json: str):
+        '''Executes a create statement and loads in json data.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            precondition_json (str): data of the precondition in json format
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        '''
+        query = (
+            'WITH apoc.convert.fromJsonMap(\''+ precondition_json +'\') as precondition_data '
+            'CREATE (p:Precondition { name: precondition_data.name, '
+                                'type: precondition_data.type,'
+                                'capability_level: precondition_data.capability_level, '
+                                'description: precondition_data.goal}) '
+            'RETURN p'
+        )
+        result = transax.run(query)
+        try:
+            return [{'p': record['p']['name']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
@@ -453,8 +494,8 @@ class Neo4jDatabaseAccess:
             bool: Ture if host is currently blocked
         """
         query = (
-                        'MATCH (h:Host) '
-                        'WHERE h.ip_address = "' + ip_address + '"'
+                        'MATCH (h1:Host) '
+                        'WHERE h1.ip_address = "' + ip_address + '"'
                         'RETURN h1'
                         )
 
@@ -560,7 +601,7 @@ class Neo4jDatabaseAccess:
     @beartype
     def update_and_return_host_notification_sent(self, ip_address: str, sent: str):
         """ Updates the notification status of a host. Once it was blocked an email
-        is sent to the admin to notify the attack.
+        is sent to the admin to notify the precondition.
 
         Args:
             ip_address (str): ip_address of the host to be blocked
@@ -586,7 +627,7 @@ class Neo4jDatabaseAccess:
             Iteratable: A list of dictonaries with the data from the query.
         """
         query = (
-                'MATCH (h:host {ip_address: "' + ip_address + '"}) '
+                'MATCH (h:Host {ip_address: "' + ip_address + '"}) '
                 'SET h.notification_sent = "' + sent + '" '
                 'RETURN h'
                 )
@@ -635,6 +676,88 @@ class Neo4jDatabaseAccess:
         result = transax.run(query)
         try:
             return [{'c': record['c']['name']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def update_service_version(self, service_name: str, version: str):
+        """Updates the service node with the version from the log file.
+
+        Args:
+            service_name (str): name of the service
+            version (str): version of the service
+        """
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._update_and_return_service_version, service_name, version)
+        for record in result:
+            print(f'Updated service version: {record}')
+
+    @staticmethod
+    @beartype
+    def _update_and_return_service_version(transax, service_name: str, version: str):
+        """Executes the update query for a specific service.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            service_name (str): the service to be updated
+            version (str): the version to be set for the speficied service
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        """
+        query = (
+                'MATCH (s:Service {name: "' + service_name + '"}) '
+                'SET s.version = "' + version + '" '
+                'RETURN s'
+                )
+        result = transax.run(query)
+        try:
+            return [{'s': record['s']['version']}
+                    for record in result]
+        # Capture any errors along with the query and data for traceability
+        except ServiceUnavailable as exception:
+            logging.error('%s raised an error: \n %s', query, exception)
+            raise
+
+    @beartype
+    def update_service_port(self, service_name: str, port: str):
+        """Updates the service node with the port from the log file.
+
+        Args:
+            service_name (str): name of the service
+            port (str): port of the service
+        """
+        with self.driver.session() as session:
+            result = session.write_transaction(
+                self._update_and_return_service_port, service_name, port)
+        for record in result:
+            print(f'Updated service port: {record}')
+
+    @staticmethod
+    @beartype
+    def _update_and_return_service_port(transax, service_name: str, port: str):
+        """Executes the update query for a specific service.
+
+        Args:
+            transax (driver.session): seesion object to execute the query
+            service_name (str): the service to be updated
+            port (str): the port to be set for the speficied service
+
+        Returns:
+            Iteratable: A list of dictonaries with the data from the query.
+        """
+        query = (
+                'MATCH (s:Service {name: "' + service_name + '"}) '
+                'SET s.port = "' + port + '" '
+                'RETURN s'
+                )
+        result = transax.run(query)
+        try:
+            return [{'s': record['s']['port']}
                     for record in result]
         # Capture any errors along with the query and data for traceability
         except ServiceUnavailable as exception:
@@ -736,46 +859,54 @@ class Neo4jDatabaseAccess:
 
 
 if __name__ == '__main__':
-    DUMMY_DATA_FOLDER_PATH = r'C:\Users\Thorsten\Documents\Masterarbeit\Security\ids_slow_dos\detection_system\code\dummy_data'
+    DUMMY_DATA_FOLDER_PATH = 'C:/Users/Thorsten/Documents/Masterarbeit/Security/ids_slow_dos/detection_system/code/dummy_data'
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_host_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_host_data.json', encoding='utf-8')
     HOST_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_connection_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_connection_data.json', encoding='utf-8')
     CONNECTION_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_service_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_service_data.json', encoding='utf-8')
     SERVICE_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_starts_connection_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_starts_connection_data.json', encoding='utf-8')
     STARTS_CONNECTION_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_connects_to_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_connects_to_data.json', encoding='utf-8')
     CONNECTS_TO_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_at_host_data.json', encoding='utf-8')
-    AT_HOST_DATA_TEST = json.loads(f.read())
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_hosted_at_data.json', encoding='utf-8')
+    HOSTED_AT_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_vulnerability_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_vulnerability_data.json', encoding='utf-8')
     VULNERABILITY_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_has_vulnerability_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_has_vulnerability_data.json', encoding='utf-8')
     HAS_VULNERABILITY_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_attack_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_attack_data.json', encoding='utf-8')
     ATTACK_DATA_TEST = json.loads(f.read())
     f.close()
 
-    f = open(DUMMY_DATA_FOLDER_PATH + r'\sample_exploits_data.json', encoding='utf-8')
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_exploits_data.json', encoding='utf-8')
     EXPLOITS_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_precondition_data.json', encoding='utf-8')
+    PRECONDITION_DATA_TEST = json.loads(f.read())
+    f.close()
+
+    f = open(DUMMY_DATA_FOLDER_PATH + '/sample_requires_data.json', encoding='utf-8')
+    REQUIRES_DATA_TEST = json.loads(f.read())
     f.close()
 
     NEO4J_URI = 'bolt://localhost:30687'
@@ -809,11 +940,17 @@ if __name__ == '__main__':
     if not neo4j_driver.check_if_constraint_exists('Attack', ['name', 'type']):
         neo4j_driver.create_unique_property_constraint('Attack', ['name', 'type'])
 
+    if not neo4j_driver.check_if_node_exists('Precondition', 'name', 'Network Access'):
+        neo4j_driver.create_precondition(json.dumps(PRECONDITION_DATA_TEST))
+    if not neo4j_driver.check_if_constraint_exists('Precondition', ['name', 'type']):
+        neo4j_driver.create_unique_property_constraint('Precondition', ['name', 'type'])
+
     neo4j_driver.create_edge(json.dumps(STARTS_CONNECTION_DATA_TEST))
     neo4j_driver.create_edge(json.dumps(CONNECTS_TO_DATA_TEST))
-    neo4j_driver.create_edge(json.dumps(AT_HOST_DATA_TEST))
+    neo4j_driver.create_edge(json.dumps(HOSTED_AT_DATA_TEST))
     neo4j_driver.create_edge(json.dumps(HAS_VULNERABILITY_DATA_TEST))
     neo4j_driver.create_edge(json.dumps(EXPLOITS_DATA_TEST))
+    neo4j_driver.create_edge(json.dumps(REQUIRES_DATA_TEST))
 
     neo4j_driver.update_connection_status('mqtt-explorer-0a61e6f1', 'active')
     neo4j_driver.update_connnection_time('mqtt-explorer-0a61e6f1', '1635015166')

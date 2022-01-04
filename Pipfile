@@ -8,6 +8,7 @@ pandas = "*"
 neo4j = "*"
 pylint = "*"
 beartype = "*"
+kubernetes = "*"
 
 [dev-packages]
 ipykernel = "*"

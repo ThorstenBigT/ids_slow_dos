@@ -36,11 +36,14 @@ class FormatLog:
         self.vulnerability_data = {"name": None,
                                     "cve_code": None,
                                     "effected_protocol": None,
-                                    "effected_version":None,
+                                    "effected_prot_version":None,
+                                    "effected_app": None,
+                                    "effected_app_version":None,
                                     "description": None
                                     }
         self.precondition_data = {"name": None,
                                     "type": None,
+                                    "capability_level": None,
                                     "description": None
                                     }
         self.attack_data = {"name": None,
@@ -143,7 +146,7 @@ class FormatLog:
             port (str): port of the service
         """
         self.service_data["port"] = port
-    
+
     @beartype
     def set_service_protocol(self, protocol: str):
         """Set communication protocol of service
@@ -172,14 +175,16 @@ class FormatLog:
         self.service_data["name"] = name
 
     def reset_service_data(self):
-        """Set values of host_data json to None
+        """Set values of service_data json to None
         """
         self.service_data = dict.fromkeys(self.service_data, None)
 
     def reset_host_data(self):
-        """Set values of host_data json to None
+        """Set values of host_data json to None. 
+        ATTENTION!!! Only set creation_time to None ohter values are default values and the 
+        ip address is neede late in the code.  
         """
-        self.connection_data = dict.fromkeys(self.connection_data, None)
+        self.host_data["creation_time"] = None
 
     @beartype
     def set_host_is_blocked(self, is_blocked: str):
@@ -190,7 +195,7 @@ class FormatLog:
             is_blocked (str): True or False
         """
         self.host_data["is_blocked"] = is_blocked
-    
+
     @beartype
     def set_host_notification_sent(self, sent: str):
         """Set values of is_blocked in host json to false or ture.
@@ -199,6 +204,24 @@ class FormatLog:
             sent (str): True or False
         """
         self.host_data["notification_sent"] = sent
+
+    @beartype
+    def set_host_ip_address(self, ip_address: str):
+        """Set values of ip_address in host json.
+
+        Args:
+            ip_address (str): ip_address of the host
+        """
+        self.host_data["ip_address"] = ip_address
+
+    @beartype
+    def set_host_creation_time(self, time: str):
+        """Set values of creation_time in host json.
+
+        Args:
+            time (str): timestamp in second (UTC)
+        """
+        self.host_data["creation_time"] = time
 
     def reset_connection_data(self):
         """Set values of vulberability_data json to None
@@ -213,7 +236,25 @@ class FormatLog:
             status (str): status code of connection (inactive/active)
         """
         self.connection_data["status"] = status
-        
+
+    @beartype
+    def set_connection_name(self, name: str):
+        """Set name of connection
+
+        Args:
+            name (str): name of the connection
+        """
+        self.connection_data["name"] = name
+
+    @beartype
+    def set_connection_last_update_time(self, time: str):
+        """Set last update time of the connection
+
+        Args:
+            time (str): time the connection was last updated
+        """
+        self.connection_data["last_update_time"] = time
+
     def reset_vulnerability_data(self):
         """Set values of connection_data json to None
         """
@@ -233,7 +274,7 @@ class FormatLog:
         Args:
             name (str): name of the vulnerability
         """
-        self.vulnerability_data["name"] = cve_code
+        self.vulnerability_data["cve_code"] = cve_code
 
     @beartype
     def set_vulnerability_effected_protocol(self, effected_protocol: str):
@@ -244,12 +285,28 @@ class FormatLog:
         self.vulnerability_data["effected_protocol"] = effected_protocol
 
     @beartype
-    def set_vulnerability_effected_version(self, effected_version: str):
+    def set_vulnerability_effected_app(self, effected_app: str):
+        """Set effected app of vulnerablitly.
+        Args:
+            effected_app (str): name of the effected app
+        """
+        self.vulnerability_data["effected_app"] = effected_app
+
+    @beartype
+    def set_vulnerability_effected_app_version(self, effected_app_version: str):
+        """Set effected app of vulnerablitly.
+        Args:
+            effected_app_version (str): name of the effected app version
+        """
+        self.vulnerability_data["effected_app_version"] = effected_app_version
+
+    @beartype
+    def set_vulnerability_effected_prot_version(self, effected_prot_version: str):
         """Set effected protocol version of vulnerablitly.
         Args:
-            effected_version (str): version of the effected protocol
+            effected_prot_version (str): version of the effected protocol
         """
-        self.vulnerability_data["effected_version"] = effected_version
+        self.vulnerability_data["effected_prot_version"] = effected_prot_version
 
     @beartype
     def set_vulnerability_description(self, description: str):
@@ -288,11 +345,19 @@ class FormatLog:
         """
         self.precondition_data["description"] = description
 
+    @beartype
+    def set_precondition_capability_level(self, capability_level: str):
+        """Set precondition capability_level needed for an attack.
+        Args:
+            capability_level (str): capability_level of the precondition
+        """
+        self.precondition_data["capability_level"] = capability_level
+
     def reset_attack_data(self):
         """Set values of precondition_data json to None
         """
         self.precondition_data = dict.fromkeys(self.precondition_data, None)
-    
+
     @beartype
     def set_attack_name(self, name: str):
         """Set attack name.
