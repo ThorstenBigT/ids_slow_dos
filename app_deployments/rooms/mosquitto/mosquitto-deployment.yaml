@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto-rooms
+  labels:
+    app: mosquitto-rooms
+  namespace: rooms
+spec:
+  selector:
+    matchLabels:
+      app: mosquitto-rooms
+  template:
+    metadata:
+      labels:
+        app: mosquitto-rooms
+    spec:
+      containers:
+      - name: mosquitto-rooms
+        image: eclipse-mosquitto:1.6.2
+        resources:
+          requests:
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 1884
+        volumeMounts:
+            - name: mosquitto-config
+              mountPath: /mosquitto/config/mosquitto.conf
+              subPath: mosquitto.conf
+            - name: mosquitto-log
+              mountPath: /var/log/mosquitto/
+      volumes:
+        - name: mosquitto-config
+          configMap:
+            name: mosquitto-rooms-config
+        - name: mosquitto-log
+          persistentVolumeClaim:
+            claimName: mosquitto-rooms-log-pvc
