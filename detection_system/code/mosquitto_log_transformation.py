@@ -4,11 +4,15 @@
 """
 import json
 
-from email import message
+# Was used for performance testing
+# import time
+# from statistics import median, mean, stdev
+
+
 from local_file_access import LocalFileAccess
 from format_log import FormatLog
 from neo4j_database_access import Neo4jDatabaseAccess
-from alarm_notification import AlarmNotification
+from network_monitoring import NetworkMonitoring
 from initialize_system import InitializeSystem
 
 LOCAL_PATH = 'C:/kind_persistent_volume/pvc-de7a29b4-8af1-4480-911a-1cd1ae980e1c_monitoring-system_mosquitto-log-pvc'
@@ -21,14 +25,22 @@ if __name__ == "__main__":
     local_file = LocalFileAccess(LOCAL_PATH, FILE_NAME)
     log_formatter = FormatLog()
     neo4j_driver = Neo4jDatabaseAccess(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
-    email_notification = AlarmNotification()
-    initilaize_system = InitializeSystem()
-    initilaize_system.demo_setup()
+    network_monitoring = NetworkMonitoring(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
+    initialize_system = InitializeSystem()
+    initialize_system.demo_setup()
+    network_monitoring.start()
+
+    # Was used for performance testing
+    #all_execution_times = []
+    #i = 1
 
     loglines =  local_file.tail_file()
     for current_line in loglines:
+
+        # Was used for performance testing
+        #start_time = time.time() * 1000
+
         if current_line != "Socket error on client <unknown>, disconnecting.":
-    
             log_formatter.extract_ip_address_by_row(current_line)
             log_formatter.extract_port_number_by_row(current_line)
             # Extracts time for host an connection
@@ -54,8 +66,8 @@ if __name__ == "__main__":
                 mosquitto_port = log_formatter.service_data["port"]
                 log_formatter.reset_service_data()
 
-            if log_formatter.connection_data['name'] is not None:
-
+            if log_formatter.connection_data['name'] is not None and log_formatter.host_data['ip_address'] is not None:
+  
                 if not neo4j_driver.check_if_host_is_blocked(log_formatter.host_data['ip_address']):
 
                     if None not in log_formatter.connection_data.values():
@@ -88,10 +100,10 @@ if __name__ == "__main__":
 
                     if "New client connected" in current_line:
 
-                        #Default values if nothing coul be read from log file
-                        if mosquitto_port is None and mosquitto_version is None:
-                            mosquitto_version = "1.6.9"
-                            mosquitto_port = "1883"
+                        #Default values if nothing could be read from log file
+                        if log_formatter.service_data['port'] is None or log_formatter.service_data['version'] is None:
+                            log_formatter.set_service_version("1.6.9")
+                            log_formatter.set_service_port("1883")
 
                         connects_to_data = ('{'
                                                     '"edge_name": "CONNECTS_TO",'
@@ -101,8 +113,8 @@ if __name__ == "__main__":
                                                     '"node2": {"name":"Service",'
                                                             '"property_names": ["name", "port", "version"],'
                                                             '"property_values": ["Mosquitto",'
-                                                                                '"'+ mosquitto_port +'",'
-                                                                                '"'+ mosquitto_version +'"]}'
+                                                                                '"'+ log_formatter.service_data['port'] +'",'
+                                                                                '"'+ log_formatter.service_data['version'] +'"]}'
                                                     '}'
                                                 )
                         neo4j_driver.create_edge(connects_to_data)
@@ -126,21 +138,15 @@ if __name__ == "__main__":
             # Keep this here so the default value of the connection is set again
             log_formatter.set_connection_status("active")
 
-            query = (
-                    'MATCH (h:Host)-[r:STARTS_CONNECTION]->(c:Connection) '
-                    'WHERE c.status = "active" AND h.notification_sent = "False" AND h.is_blocked = "False"'
-                    'RETURN h,count(r) as count'
-                    )
-            result = neo4j_driver.execute_and_return_query_result(query)
-            if result is not None:
-                message = ""
-                for row in result:
-                    if row['count'] > 50:
-                        message = 'Host ' + row['h']['ip_address'] + ' has ' +  str(row['count']) + ' active connections'
-                        neo4j_driver.update_and_return_host_block(row['h']['ip_address'], "True")
+            # Was used for performance testing
+            #end_time = time.time() * 1000
+            #execution_time = end_time - start_time
+            #all_execution_times.append(execution_time)
+            #if i == 100:
+            #    all_execution_times = list(filter(lambda num: num != 0.0, all_execution_times))
+            #    print(all_execution_times)
+            #    print(median(all_execution_times))
+            #    print(mean(all_execution_times))
+            #    print(stdev(all_execution_times))
+            #i = i+1
 
-                        email_notification.connect_to_smtp_server()
-                        email_notification.send_email(message)
-                        email_notification.stop_smtp()
-                        neo4j_driver.update_and_return_host_notification_sent(row['h']['ip_address'], "True")
-                        message = ""

@@ -1,4 +1,4 @@
-"""This module send a email notification if an attack is detected.
+"""This module is a auxiliary class to write a email notification if an attack is detected.
     Adapted from:
         https://docs.python.org/3/library/email.examples.html
         [last accessed December 2021]
@@ -8,9 +8,7 @@
 """
 import smtplib
 from email.message import EmailMessage
-
 from beartype import beartype
-
 
 EMAIL = 'ids_masterarbeit@gmx.at'
 EMAIL_PASS ='cYqBUB5L'
