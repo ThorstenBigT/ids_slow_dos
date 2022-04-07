@@ -911,7 +911,7 @@ if __name__ == '__main__':
 
     NEO4J_URI = 'bolt://localhost:30687'
     NEO4J_USER = 'neo4j'
-    NEO4J_PASS = 'gh1KLaqw'
+    NEO4J_PASS = '1234'
 
     neo4j_driver = Neo4jDatabaseAccess(NEO4J_URI, NEO4J_USER, NEO4J_PASS)
 

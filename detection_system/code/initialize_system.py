@@ -17,7 +17,7 @@ from format_log import FormatLog
 
 NEO4J_URI = 'bolt://localhost:30687'
 NEO4J_USER = 'neo4j'
-NEO4J_PASS = 'gh1KLaqw'
+NEO4J_PASS = '1234'
 
 class InitializeSystem:
     """ A class to set up the inital database set up with host, vulnearbilities etc.

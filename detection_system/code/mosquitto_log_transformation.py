@@ -19,7 +19,7 @@ LOCAL_PATH = 'C:/kind_persistent_volume/pvc-de7a29b4-8af1-4480-911a-1cd1ae980e1c
 FILE_NAME = 'mosquitto.log'
 NEO4J_URI = 'bolt://localhost:30687'
 NEO4J_USER = 'neo4j'
-NEO4J_PASS = 'gh1KLaqw'
+NEO4J_PASS = '1234'
 
 if __name__ == "__main__":
     local_file = LocalFileAccess(LOCAL_PATH, FILE_NAME)
