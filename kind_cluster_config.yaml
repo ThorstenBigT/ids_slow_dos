@@ -1,8 +1,3 @@
-"""Create a kind cluster config to create a master node is more efficient resoruce
-efficient than docker desktop k8s. 
-    Author: Thorsten Steuer
-    Licence: Apache 2.0
-"""
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
@@ -10,6 +5,9 @@ nodes:
   extraPortMappings:
     - containerPort: 30880
       hostPort: 30880
+      protocol: TCP
+    - containerPort: 30881
+      hostPort: 30881
       protocol: TCP
     - containerPort: 30883
       hostPort: 30883
