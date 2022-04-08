@@ -1,5 +1,10 @@
 '''This module handles CRUD operation for the Neo4j database.
-https://neo4j.com/docs/api/python-driver/current/#quick-example
+    Adapted from:
+    https://neo4j.com/docs/api/python-driver/current/#quick-example
+    [last accessed December 2021]
+
+    Author: Thorsten Steuer
+    Licence: Apache 2.0
 '''
 import logging
 from typing import List

@@ -1,4 +1,9 @@
 """This module handles access to local files.
+
+    Adapted from:
+    https://medium.com/@aliasav/how-follow-a-file-in-python-tail-f-in-python-bca026a901cf
+    [last accessed December 2021]
+
     Author: Thorsten Steuer
     Licence: Apache 2.0
 """
