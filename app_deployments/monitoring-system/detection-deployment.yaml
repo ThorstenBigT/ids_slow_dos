@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: detection-app
-        image: bigt1991/python-container-detection-app:latest
+        image: bigt1991/idsslowdos:latest
         volumeMounts:
         - name: mosquitto-log-pv
           mountPath: /var/log/mosquitto/
