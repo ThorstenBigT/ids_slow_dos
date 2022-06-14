@@ -15,7 +15,7 @@ from neo4j_database_access import Neo4jDatabaseAccess
 from network_monitoring import NetworkMonitoring
 from initialize_system import InitializeSystem
 
-LOCAL_PATH = 'C:/kind_persistent_volume/pvc-de7a29b4-8af1-4480-911a-1cd1ae980e1c_monitoring-system_mosquitto-log-pvc'
+LOCAL_PATH = 'C:/kind_persistent_volume/pvc-0dd93242-6f2a-44bf-b4ee-b9879850159d_monitoring-system_mosquitto-log-pvc'
 FILE_NAME = 'mosquitto.log'
 NEO4J_URI = 'bolt://localhost:30687'
 NEO4J_USER = 'neo4j'
@@ -118,6 +118,7 @@ if __name__ == "__main__":
                                                     '}'
                                                 )
                         neo4j_driver.create_edge(connects_to_data)
+                        log_formatter.reset_service_data()
 
                     if 'disconnected' in current_line:
                         log_formatter.set_connection_status("inactive")

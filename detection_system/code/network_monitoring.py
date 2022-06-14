@@ -2,7 +2,7 @@
     Author: Thorsten Steuer
     Licence: Apache 2.0
 """
-from statistics import median, mean, stdev
+#from statistics import median, mean, stdev
 import time
 import threading
 import sys
